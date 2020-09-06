@@ -65,7 +65,14 @@ namespace Pretzel.Logic.Extensions
         {
             if (messageLevel >= _minLevel)
             {
-                _trace(string.Format(message, messageParameters), messageLevel);
+                if( messageParameters != null && messageParameters.Length > 0 )
+                {
+                    _trace( string.Format( message, messageParameters ), messageLevel );
+                }
+                else
+                {
+                    _trace( message, messageLevel );
+                }
             }
         }
     }
