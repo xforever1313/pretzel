@@ -63,14 +63,12 @@ namespace Pretzel
                     var program = new Program();
                     host.SatisfyImports(program);
                     var result = await program.Run(GlobalOptions, args);
-                    WaitForClose();
                     return result;
                 }
             }
             catch (Exception ex)
             {
                 Tracing.Error(ex.Message);
-                WaitForClose();
                 return -1;
             }
         }
@@ -154,22 +152,7 @@ namespace Pretzel
             catch (Exception ex)
             {
                 Tracing.Error(ex.Message);
-                WaitForClose();
                 return -1;
-            }
-        }
-
-        [System.Diagnostics.Conditional("DEBUG")]
-        public static void WaitForClose()
-        {
-            Console.WriteLine(@"Press any key to continue...");
-            try
-            {
-                Console.ReadKey();
-            }
-            catch (InvalidOperationException)
-            {
-                // Output is redirected, we don't care to keep console open just let it close
             }
         }
 
