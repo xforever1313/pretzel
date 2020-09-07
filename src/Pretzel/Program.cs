@@ -195,8 +195,10 @@ namespace Pretzel
                     {
                         try
                         {
-                            var asm = Assembly.LoadFrom(file);
+                            Tracing.Debug( "Loading Assembly: " + file );
+                            var asm = Assembly.LoadFile(file);
                             configuration.WithAssembly(asm);
+                            Tracing.Debug( "Loaded Assembly: " + asm.FullName );
                         }
                         catch (ReflectionTypeLoadException)
                         {
