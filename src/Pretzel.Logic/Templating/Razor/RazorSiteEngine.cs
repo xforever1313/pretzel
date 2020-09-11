@@ -82,7 +82,7 @@ namespace Pretzel.Logic.Templating.Razor
                 var pageContent = pageData.Content;
                 pageData.Content = pageData.FullContent;
 
-                IRazorEngineCompiledTemplate template = engine.Compile(
+                IRazorEngineCompiledTemplate<RazorEngineTemplateBase<PageContext>> template = engine.Compile<RazorEngineTemplateBase<PageContext>>(
                     content,
                     builder =>
                     {
@@ -93,11 +93,9 @@ namespace Pretzel.Logic.Templating.Razor
                                 builder.AddAssemblyReference( assem );
                             }
                         }
-
-                        builder.AddAssemblyReferenceByName( "System" );
                     }
                 );
-                content = template.Run( pageData );
+                content = template.Run( p => p.Model = pageData );
                 pageData.Content = pageContent;
 
                 return content;
