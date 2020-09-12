@@ -1,5 +1,5 @@
-﻿using Pretzel.Logic.Extensibility;
-using RazorEngine.Templating;
+using Pretzel.Logic.Extensibility;
+using RazorEngineCore;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -15,6 +15,7 @@ namespace Pretzel.Logic.Templating.Razor
         dynamic Tag { get; set; }
     }
 
+#if false
     public class ExtensibleTemplate<T> : TemplateBase<T>, IExtensibleTemplate
     {
         public dynamic Filter { get; set; }
@@ -49,7 +50,7 @@ namespace Pretzel.Logic.Templating.Razor
             return template;
         }
     }
-
+#endif
     public class ExtensibleProxy<T> : DynamicObject where T : class, IName
     {
         private readonly Dictionary<string, Tuple<T, MethodInfo>> extensibleMethods;

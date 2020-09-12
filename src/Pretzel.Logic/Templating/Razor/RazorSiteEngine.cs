@@ -1,16 +1,14 @@
-using Pretzel.Logic.Extensions;
-using Pretzel.Logic.Templating.Context;
-using RazorEngine;
-using RazorEngine.Configuration;
-using RazorEngine.Templating;
 using System;
-using System.IO;
-using System.Text.RegularExpressions;
-using System.Linq;
-using Pretzel.Logic.Extensibility;
 using System.Collections.Generic;
 using System.Composition;
-using Microsoft.AspNetCore.Mvc.Razor.Extensions;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using Pretzel.Logic.Extensibility;
+using Pretzel.Logic.Extensions;
+using Pretzel.Logic.Templating.Context;
+using RazorEngineCore;
 
 namespace Pretzel.Logic.Templating.Razor
 {
@@ -75,32 +73,37 @@ namespace Pretzel.Logic.Templating.Razor
 
         protected override string RenderTemplate(string content, PageContext pageData)
         {
-            var serviceConfiguration = new TemplateServiceConfiguration
-            {
-                TemplateManager = new IncludesResolver(FileSystem, includesPath),
-                BaseTemplateType = typeof(ExtensibleTemplate<>),
-                DisableTempFileLocking = true,
-                CachingProvider = new DefaultCachingProvider(t => { }),
-                ConfigureCompilerBuilder = builder => ModelDirective.Register(builder)
-            };
-            serviceConfiguration.Activator = new ExtensibleActivator(serviceConfiguration.Activator, Filters, _allTags);
-
-            Engine.Razor = RazorEngineService.Create(serviceConfiguration);
-
-            content = Regex.Replace(content, "<p>(@model .*?)</p>", "$1");
-
-            var pageContent = pageData.Content;
-            pageData.Content = pageData.FullContent;
-
             try
             {
-                content = Engine.Razor.RunCompile(content, pageData.Page.File, typeof(PageContext), pageData);
+                IRazorEngine engine = new RazorEngine();
+
+                content = Regex.Replace( content, "<p>(@model .*?)</p>", "$1" );
+
+                var pageContent = pageData.Content;
+                pageData.Content = pageData.FullContent;
+
+                IEnumerable<AssemblyName> assemblies = Assembly.GetExecutingAssembly().GetReferencedAssemblies();
+
+                IRazorEngineCompiledTemplate template = engine.Compile(
+                    content,
+                    builder =>
+                    {
+                        foreach( AssemblyName assm in assemblies )
+                        {
+                            builder.AddAssemblyReferenceByName( assm.FullName );
+                        }
+                    }
+                );
+                content = template.Run( pageData );
                 pageData.Content = pageContent;
+
                 return content;
             }
             catch (Exception e)
             {
-                Tracing.Error(@"Failed to render template, falling back to direct content");
+                Tracing.Error(
+                    $"Failed to render template for page '{pageData.Page.Id}' for reason '{e.Message}', falling back to direct content"
+                );
                 Tracing.Debug(e.Message);
                 Tracing.Debug(e.StackTrace);
                 return content;
