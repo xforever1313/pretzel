@@ -1,19 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Composition;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using Pretzel.Logic.Extensibility;
 using Pretzel.Logic.Extensions;
 using Pretzel.Logic.Templating.Context;
-using RazorEngineCore;
+using RazorEngine;
+using RazorEngine.Configuration;
+using RazorEngine.Templating;
+using System;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Linq;
+using Pretzel.Logic.Extensibility;
+using System.Collections.Generic;
+using System.Composition;
+using Microsoft.AspNetCore.Mvc.Razor.Extensions;
 
 namespace Pretzel.Logic.Templating.Razor
 {
     [Shared]
-    [SiteEngineInfo( Engine = "razor" )]
+    [SiteEngineInfo(Engine = "razor")]
     public class RazorSiteEngine : JekyllEngineBase
     {
         private static readonly string[] layoutExtensions = { ".cshtml" };
@@ -28,9 +30,9 @@ namespace Pretzel.Logic.Templating.Razor
 
         private class TagComparer : IEqualityComparer<ITag>
         {
-            public bool Equals( ITag x, ITag y )
+            public bool Equals(ITag x, ITag y)
             {
-                if( x == null || y == null )
+                if (x == null || y == null)
                 {
                     return false;
                 }
@@ -38,7 +40,7 @@ namespace Pretzel.Logic.Templating.Razor
                 return x.Name == y.Name;
             }
 
-            public int GetHashCode( ITag obj )
+            public int GetHashCode(ITag obj)
             {
                 return obj.Name.GetHashCode();
             }
@@ -46,23 +48,23 @@ namespace Pretzel.Logic.Templating.Razor
 
         protected override void PreProcess()
         {
-            includesPath = Path.Combine( Context.SourceFolder, "_includes" );
+            includesPath = Path.Combine(Context.SourceFolder, "_includes");
 
-            if( Tags != null )
+            if (Tags != null)
             {
-                var toAdd = Tags.Except( _allTags, new TagComparer() ).ToList();
-                _allTags.AddRange( toAdd );
+                var toAdd = Tags.Except(_allTags, new TagComparer()).ToList();
+                _allTags.AddRange(toAdd);
             }
 
-            if( TagFactories != null )
+            if (TagFactories != null)
             {
-                var toAdd = TagFactories.Select( factory =>
+                var toAdd = TagFactories.Select(factory =>
                 {
-                    factory.Initialize( Context );
+                    factory.Initialize(Context);
                     return factory.CreateTag();
-                } ).Except( _allTags, new TagComparer() ).ToList();
+                }).Except(_allTags, new TagComparer()).ToList();
 
-                _allTags.AddRange( toAdd );
+                _allTags.AddRange(toAdd);
             }
         }
 
@@ -71,41 +73,46 @@ namespace Pretzel.Logic.Templating.Razor
             get { return layoutExtensions; }
         }
 
-        protected override string RenderTemplate( string content, PageContext pageData )
+        protected override string RenderTemplate(string content, PageContext pageData)
         {
+            var serviceConfiguration = new TemplateServiceConfiguration
+            {
+                TemplateManager = new IncludesResolver(FileSystem, includesPath),
+                BaseTemplateType = typeof(ExtensibleTemplate<>),
+                DisableTempFileLocking = true,
+                CachingProvider = new DefaultCachingProvider(t => { }),
+                ConfigureCompilerBuilder = builder => ModelDirective.Register(builder)
+            };
+            serviceConfiguration.Activator = new ExtensibleActivator(serviceConfiguration.Activator, Filters, _allTags);
+
+            Engine.Razor = RazorEngineService.Create(serviceConfiguration);
+
+            content = Regex.Replace(content, "<p>(@model .*?)</p>", "$1");
+
+            var pageContent = pageData.Content;
+            pageData.Content = pageData.FullContent;
+
             try
             {
-                IRazorEngine engine = new RazorEngine();
-
-                content = Regex.Replace( content, "<p>(@model .*?)</p>", "$1" );
-
-                var pageContent = pageData.Content;
-                pageData.Content = pageData.FullContent;
-
-                IRazorEngineCompiledTemplate<RazorEngineTemplateBase<PageContext>> template = engine.Compile<RazorEngineTemplateBase<PageContext>>(
-                    content,
-                    builder =>
-                    {
-                        foreach( Assembly assem in AppDomain.CurrentDomain.GetAssemblies().Where( p => ( p.IsDynamic == false ) ) )
-                        {
-                            if( string.IsNullOrWhiteSpace( assem.Location ) == false )
-                            {
-                                builder.AddAssemblyReference( assem );
-                            }
-                        }
-                    }
-                );
-                content = template.Run( p => p.Model = pageData );
+                content = Engine.Razor.RunCompile(content, pageData.Page.File, typeof(PageContext), pageData);
                 pageData.Content = pageContent;
-
+                return content;
+            }
+            catch( FileNotFoundException e )
+            {
+                Tracing.Error(
+                    $"Failed to render template for page '{pageData.Page.Id}' for reason '{e.GetType().FullName}: {e.Message}', falling back to direct content"
+                );
+                Tracing.Error( "\t-Missing File: " + e.FileName );
+                Tracing.Error( "\t-Log: " + e.FusionLog );
+                Tracing.Debug( e.StackTrace );
                 return content;
             }
             catch( Exception e )
             {
                 Tracing.Error(
-                    $"Failed to render template for page '{pageData.Page.Id}' for reason '{e.Message}', falling back to direct content"
+                    $"Failed to render template for page '{pageData.Page.Id}' for reason '{e.GetType().FullName}: {e.Message}', falling back to direct content"
                 );
-                Tracing.Debug( e.Message );
                 Tracing.Debug( e.StackTrace );
                 return content;
             }

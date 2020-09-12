@@ -1,3 +1,4 @@
+using RazorEngine.Templating;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -5,10 +6,8 @@ using System.IO.Abstractions;
 
 namespace Pretzel.Logic.Templating.Razor
 {
-#if false
     internal class IncludesResolver : ITemplateManager
     {
-
         private readonly IFileSystem fileSystem;
         private readonly string includesPath;
         private readonly Dictionary<ITemplateKey, ITemplateSource> _templates = new Dictionary<ITemplateKey, ITemplateSource>();
@@ -59,6 +58,5 @@ namespace Pretzel.Logic.Templating.Razor
                 _templates.Add(key, source);
             }
         }
-}
-#endif
+    }
 }
