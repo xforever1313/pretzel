@@ -69,6 +69,8 @@ namespace Pretzel
             catch (Exception ex)
             {
                 Tracing.Error(ex.Message);
+                Tracing.Error(string.Empty);
+                Tracing.Error(ex.StackTrace);
                 return -1;
             }
         }
@@ -156,30 +158,20 @@ namespace Pretzel
             }
         }
 
-        internal static CompositionHost Compose(bool debug, bool safe, string path)
+        internal static CompositionHost Compose( bool debug, bool safe, string path )
         {
-            try
-            {
-                var configuration = new ContainerConfiguration();
+            var configuration = new ContainerConfiguration();
 
-                configuration
-                    .WithAssembly(Assembly.GetExecutingAssembly())
-                    .WithAssembly(typeof(Logic.SanityCheck).Assembly)
-                    ;
+            configuration
+                .WithAssembly( Assembly.GetExecutingAssembly() )
+                .WithAssembly( typeof( Logic.SanityCheck ).Assembly )
+                ;
 
-                LoadPlugins(configuration, safe, path);
+            LoadPlugins( configuration, safe, path );
 
-                var container = configuration.CreateContainer();
+            var container = configuration.CreateContainer();
 
-                return container;
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                Console.WriteLine(@"Unable to load: \r\n{0}",
-                    string.Join("\r\n", ex.LoaderExceptions.Select(e => e.Message)));
-
-                throw;
-            }
+            return container;
         }
 
         private static void LoadPlugins(ContainerConfiguration configuration, bool safe, string path)
@@ -196,17 +188,19 @@ namespace Pretzel
                         try
                         {
                             Tracing.Debug( "Loading Assembly: " + file );
-                            var asm = Assembly.LoadFile(file);
+                            var asm = Assembly.LoadFrom(file);
                             configuration.WithAssembly(asm);
                             Tracing.Debug( "Loaded Assembly: " + asm.FullName );
                         }
-                        catch (ReflectionTypeLoadException)
+                        catch (ReflectionTypeLoadException e)
                         {
-                            //Cannot load the type
+                            // Cannot load the type
+                            Tracing.Error( $"Could not load assembly for reason: {e.Message}" );
                         }
-                        catch (BadImageFormatException)
+                        catch (BadImageFormatException e)
                         {
-                            //Cannot load the type. It's probably wrong bitness
+                            // Cannot load the type. It's probably wrong bitness
+                            Tracing.Error( $"Could not load assembly for reason: {e.Message}" );
                         }
                     }
 

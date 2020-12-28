@@ -20,9 +20,13 @@ namespace Pretzel.SethExtensions
 
         static SethExtensionsInit()
         {
-            CommonMarkSettings.Default.OutputDelegate =
-                ( doc, output, settings ) =>
-                new SethHtmlFormatter( output, settings ).WriteDocument( doc );
+            // Don't override if it is already set.
+            if( CommonMarkSettings.Default.OutputDelegate == null )
+            {
+                CommonMarkSettings.Default.OutputDelegate =
+                    ( doc, output, settings ) =>
+                    new SethHtmlFormatter( output, settings ).WriteDocument( doc );
+            }
         }
 
         // ---------------- Functions ----------------
