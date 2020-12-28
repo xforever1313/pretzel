@@ -181,13 +181,27 @@ namespace Pretzel.Logic.Templating
                 while (metadata.ContainsKey("layout"))
                 {
                     var layout = metadata["layout"];
-                    if ((string)layout == "nil" || layout == null)
+                    if( (string)layout == "nil" || layout == null )
+                    {
                         break;
+                    }
 
-                    var path = FindLayoutPath(layout.ToString());
+                    string path;
+                    if( metadata.ContainsKey( "layout_is_path" ) &&
+                        "true".Equals( metadata["layout_is_path"].ToString(), StringComparison.InvariantCultureIgnoreCase )
+                    )
+                    {
+                        path = layout.ToString();
+                    }
+                    else
+                    {
+                        path = FindLayoutPath( layout.ToString() );
+                    }
 
-                    if (path == null)
+                    if( path == null )
+                    {
                         break;
+                    }
 
                     try
                     {
