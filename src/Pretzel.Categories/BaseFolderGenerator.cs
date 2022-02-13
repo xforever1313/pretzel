@@ -11,11 +11,19 @@ namespace Pretzel.Categories
     public abstract class BaseFolderGenerator : IBeforeProcessingTransform
     {
         private readonly string folderName = string.Empty;
+        private readonly string layoutName = string.Empty;
+
         private bool stopFolderGeneration;
 
-        protected BaseFolderGenerator(string folderToGenerate)
+        protected BaseFolderGenerator( string folderToGenerate ) :
+            this( folderToGenerate, folderToGenerate )
+        {
+        }
+
+        protected BaseFolderGenerator(string folderToGenerate, string layoutName)
         {
             this.folderName = folderToGenerate;
+            this.layoutName = layoutName;
         }
 
         public string[] GetArguments(string command) => command == "taste" || command == "bake" ? new[] { $"n{this.folderName}" } : new string[0];
@@ -23,7 +31,7 @@ namespace Pretzel.Categories
         public void Transform(SiteContext siteContext)
         {
             var layout = "layout";
-            var layoutConfigKey = $"{this.folderName}_pages_layout";
+            var layoutConfigKey = $"{this.layoutName}_pages_layout";
 
             if (this.stopFolderGeneration)
             {
