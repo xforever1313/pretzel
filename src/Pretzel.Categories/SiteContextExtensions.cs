@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.Categories
@@ -100,16 +98,30 @@ namespace Pretzel.Categories
                 }
             }
 
-            foreach( KeyValuePair<Page, IList<Page>> kvp in subCategories )
+            return subCategories;
+        }
+
+        public static IEnumerable<Page> GetPostsFromSubCategory( this SiteContext siteContext, string subCategory )
+        {
+            siteContext.ThrowIfSubCategoriesDisabled();
+
+            var posts = new List<Page>();
+
+            foreach( Page post in siteContext.Posts )
             {
-                Console.WriteLine( $"{kvp.Key.Title}|{kvp.Key.Url}" + ":" );
-                foreach( Page vlaue in kvp.Value )
+                string pageSubCategory = post.TryGetSubCategory();
+                if( string.IsNullOrWhiteSpace( pageSubCategory ) )
                 {
-                    Console.WriteLine( $"\t-{vlaue.Title}|{vlaue.Url}" );
+                    continue;
+                }
+
+                if( subCategory.Equals( pageSubCategory ) )
+                {
+                    posts.Add( post );
                 }
             }
 
-            return subCategories;
+            return posts;
         }
     }
 }
