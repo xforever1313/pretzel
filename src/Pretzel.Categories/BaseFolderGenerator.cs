@@ -47,11 +47,12 @@ namespace Pretzel.Categories
             {
                 var p = new Page
                 {
-                    Content = $"---\r\n layout: {layout} \r\n {this.folderName}: {name} \r\n---\r\n",
+                    Title = name,
+                    Content = $"---\r\n layout: {layout} \r\n {this.layoutName}: {name} \r\n---\r\n",
                     File = Path.Combine(siteContext.SourceFolder, this.folderName, SlugifyFilter.Slugify(name), "index.html"),
                     Filepath = Path.Combine(siteContext.OutputFolder, this.folderName, SlugifyFilter.Slugify(name), "index.html"),
                     OutputFile = Path.Combine(siteContext.OutputFolder, this.folderName, SlugifyFilter.Slugify(name), "index.html"),
-                    Bag = $"---\r\n layout: {layout} \r\n {this.folderName}: {name} \r\n---\r\n".YamlHeader()
+                    Bag = $"---\r\n layout: {layout} \r\n {this.layoutName}: {name} \r\n---\r\n".YamlHeader()
                 };
 
                 p.Url = new LinkHelper().EvaluateLink(siteContext, p);

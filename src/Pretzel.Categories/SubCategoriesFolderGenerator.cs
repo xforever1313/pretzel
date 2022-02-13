@@ -11,7 +11,7 @@ namespace Pretzel.Categories
     [Export( typeof( IBeforeProcessingTransform ) )]
     public class SubCategoriesFolderGenerator : BaseFolderGenerator
     {
-        private const string pageKey = "subcategory";
+        private const string pageKey = PageExtensions.SubCategoryPageKey;
 
         public SubCategoriesFolderGenerator() :
             // For ease-of-use, put subcategories in the category folder,
@@ -25,7 +25,7 @@ namespace Pretzel.Categories
         protected override IEnumerable<string> GetNames( SiteContext siteContext )
         {
             var list = new List<string>();
-            if( siteContext.SubcategoriesEnabled() == false )
+            if( siteContext.IsSubcategoriesEnabled() == false )
             {
                 return list;
             }
