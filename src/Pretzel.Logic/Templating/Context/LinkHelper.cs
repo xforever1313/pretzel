@@ -43,10 +43,22 @@ namespace Pretzel.Logic.Templating.Context
                 permalink += "/";
             }
 
+            string subCategory;
+            if( page.Bag.ContainsKey( "subcategory" ) )
+            {
+                subCategory = page.Bag["subcategory"].ToString();
+            }
+            else
+            {
+                subCategory = string.Empty;
+            }
+
             permalink = permalink.Replace(":categories", string.Join("/", page.Categories.ToArray()));
             permalink = permalink.Replace(":dashcategories", string.Join("-", page.Categories.ToArray()));
             permalink = permalink.Replace( ":slug_categories", SlugifyFilter.Slugify( string.Join( "/", page.Categories ) ) );
             permalink = permalink.Replace( ":slug_dashcategories", SlugifyFilter.Slugify( string.Join( "-", page.Categories ) ) );
+            permalink = permalink.Replace( ":subcategory", subCategory );
+            permalink = permalink.Replace( ":slug_subcategory", SlugifyFilter.Slugify( subCategory ) );
             permalink = permalink.Replace(":year", page.Date.Year.ToString(CultureInfo.InvariantCulture));
             permalink = permalink.Replace(":month", page.Date.ToString("MM"));
             permalink = permalink.Replace(":day", page.Date.ToString("dd"));
