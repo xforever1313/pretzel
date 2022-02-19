@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Composition;
-using System.Linq;
 using Pretzel.Logic.Extensibility;
 using Pretzel.Logic.Templating.Context;
 
@@ -34,71 +32,55 @@ namespace Pretzel.Categories
         {
             siteContext.ThrowIfSubCategoriesDisabled();
 
-            // Make categories as strings.
-            var categoriesAsStrings = new Dictionary<string, HashSet<string>>();
-            foreach( Page post in siteContext.Posts )
+            // Make categories as pages.
+            var categoriesAsPages = new Dictionary<Page, List<Page>>();
+
+            void addSubPages( Page parentPage )
             {
-                string postSubcatgory = post.TryGetSubCategory();
-                foreach( string category in post.Categories )
+                foreach( Page page in siteContext.Pages )
                 {
-                    if( categoriesAsStrings.ContainsKey( category ) == false )
+                    string pageCategory = page.TryGetCategory();
+                    string subCategory = page.TryGetSubCategory();
+
+                    if( ReferenceEquals( parentPage, page ) )
                     {
-                        categoriesAsStrings[category] = new HashSet<string>();
+                        continue;
+                    }
+                    else if( string.IsNullOrWhiteSpace( pageCategory ) )
+                    {
+                        continue;
+                    }
+                    else if( string.IsNullOrWhiteSpace( subCategory ) )
+                    {
+                        // If there's no sub-category, continue.
+                        continue;
                     }
 
-                    if( categoriesAsStrings[category].Contains( postSubcatgory ) == false )
+                    if( parentPage.TryGetCategory() == pageCategory )
                     {
-                        if( string.IsNullOrWhiteSpace( postSubcatgory ) == false )
-                        {
-                            categoriesAsStrings[category].Add( postSubcatgory );
-                        }
+                        categoriesAsPages[parentPage].Add( page );
                     }
                 }
             }
 
-            // Make categories as pages.
-            var categoriesAsPages = new Dictionary<Page, List<Page>>();
-            var parentCategoriesAdded = new HashSet<string>();
             foreach( Page page in siteContext.Pages )
             {
                 string pageCategory = page.TryGetCategory();
+                string subCategory = page.TryGetSubCategory();
+
                 if( string.IsNullOrWhiteSpace( pageCategory ) )
                 {
                     continue;
                 }
-
-                if(
-                    categoriesAsStrings.ContainsKey( pageCategory ) &&
-                    ( parentCategoriesAdded.Contains( pageCategory ) == false )
-                )
+                else if( string.IsNullOrWhiteSpace( subCategory ) == false )
                 {
-                    categoriesAsPages[page] = new List<Page>();
-                    parentCategoriesAdded.Add( pageCategory );
+                    // If there's a sub-category, its not a parent page.
+                    continue;
                 }
 
-                var subcategoriesAdded = new HashSet<string>();
-                foreach( Page page2 in siteContext.Pages )
-                {
-                    string pageSubcategory = page2.TryGetSubCategory();
-                    if( string.IsNullOrWhiteSpace( pageSubcategory ) )
-                    {
-                        continue;
-                    }
-
-                    if(
-                        categoriesAsStrings[pageCategory].Contains( pageSubcategory ) &&
-                        ( subcategoriesAdded.Contains( pageSubcategory ) == false )
-                    )
-                    {
-                        categoriesAsPages[page].Add( page2 );
-                        subcategoriesAdded.Add( pageSubcategory );
-                    }
-                }
+                categoriesAsPages[page] = new List<Page>();
+                addSubPages( page );
             }
-
-            this.CategoryNames = new ReadOnlyDictionary<string, IEnumerable<string>>(
-                categoriesAsStrings.ToDictionary( kv => kv.Key, kv => kv.Value.AsEnumerable() )
-            );
 
             var categoryPages = new List<CategoryPage>();
             foreach( var page in categoriesAsPages )

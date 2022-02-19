@@ -58,7 +58,10 @@ namespace Pretzel.Categories
             return category;
         }
 
-        public static IEnumerable<Page> GetPostsFromSubCategory( this SiteContext siteContext, string subCategory )
+        public static IEnumerable<Page> GetPostsFromSubCategory(
+            this SiteContext siteContext,
+            string subCategory
+        )
         {
             siteContext.ThrowIfSubCategoriesDisabled();
 

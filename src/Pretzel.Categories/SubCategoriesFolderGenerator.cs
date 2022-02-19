@@ -2,63 +2,85 @@
 using System;
 using System.Collections.Generic;
 using System.Composition;
+using System.IO;
 using System.Linq;
 using Pretzel.Logic.Extensibility;
+using Pretzel.Logic.Extensibility.Extensions;
+using Pretzel.Logic.Extensions;
 using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.Categories
 {
     [Export( typeof( IBeforeProcessingTransform ) )]
-    public class SubCategoriesFolderGenerator : BaseFolderGenerator
+    public class SubCategoriesFolderGenerator : IBeforeProcessingTransform
     {
+        // ---------------- Fields ----------------
+
         private const string pageKey = PageExtensions.SubCategoryPageKey;
 
-        public SubCategoriesFolderGenerator() :
-            // For ease-of-use, put subcategories in the category folder,
-            // (a sub-category is a category)
-            // but make the layout "subcategory" so we can tell the difference
-            // when generating a site.
-            base( "category", "subcategory" )
+        private const string categoryLayoutName = CategoriesFolderGenerator.CategoryFolderName;
+        private const string subcategoryLayoutName = "subcategory";
+
+        // ---------------- Constructor ----------------
+
+        public SubCategoriesFolderGenerator()
         {
         }
 
-        protected override IEnumerable<string> GetNames( SiteContext siteContext )
+        // ---------------- Functions ----------------
+
+        public void Transform( SiteContext siteContext )
         {
-            var list = new List<string>();
-            if( siteContext.IsSubcategoriesEnabled() == false )
+            string layout = "layout";
+            string layoutConfigKey = $"{subcategoryLayoutName}_pages_layout";
+
+            if( siteContext.Config.ContainsKey( layoutConfigKey ) )
             {
-                return list;
+                layout = siteContext.Config[layoutConfigKey].ToString();
             }
 
             Console.WriteLine( "Sub-categories enabled" );
 
-            foreach( Page page in siteContext.Posts )
+            var dict = new Dictionary<string, List<string>>();
+            foreach( Page post in siteContext.Posts )
             {
-                if( page.Bag.ContainsKey( pageKey ) == false )
-                {
-                    continue;
-                }
-                if( string.IsNullOrWhiteSpace( page.Bag[pageKey].ToString() ) )
-                {
-                    continue;
-                }
+                string categoryName = post.TryGetCategory();
+                string subCategoryName = post.TryGetSubCategory();
 
-                string subCategory = page.Bag[pageKey].ToString();
                 if(
-                    siteContext.Categories.Any(
-                        c => c.Name.Equals( subCategory, StringComparison.InvariantCultureIgnoreCase )
-                    )
+                    string.IsNullOrWhiteSpace( categoryName ) ||
+                    string.IsNullOrWhiteSpace( subCategoryName )
                 )
                 {
-                    throw new InvalidOperationException(
-                        $"Sub-category '{subCategory}' labeled as category on page {page.File}"
-                    );
+                    continue;
                 }
 
-                list.Add( page.Bag[pageKey].ToString() );
+                if( dict.ContainsKey( categoryName ) == false )
+                {
+                    dict[categoryName] = new List<string>();
+                }
+                dict[categoryName].Add( subCategoryName );
             }
 
-            return list;
+            foreach( KeyValuePair<string, List<string>> kvp in dict )
+            {
+                string category = kvp.Key;
+                foreach( string subcat in kvp.Value )
+                {
+                    var p = new Page
+                    {
+                        Title = subcat,
+                        Content = $"---\r\n layout: {layout} \r\n {categoryLayoutName}: {category} \r\n {subcategoryLayoutName}: {subcat} \r\n---\r\n",
+                        File = Path.Combine( siteContext.SourceFolder, categoryLayoutName, SlugifyFilter.Slugify( category ), SlugifyFilter.Slugify( subcat ), "index.html" ),
+                        Filepath = Path.Combine( siteContext.OutputFolder, categoryLayoutName, SlugifyFilter.Slugify( category ), SlugifyFilter.Slugify( subcat ), "index.html" ),
+                        OutputFile = Path.Combine( siteContext.OutputFolder, categoryLayoutName, SlugifyFilter.Slugify( category ), SlugifyFilter.Slugify( subcat ), "index.html" ),
+                        Bag = $"---\r\n layout: {layout} \r\n {categoryLayoutName}: {category} \r\n {subcategoryLayoutName}: {subcat} \r\n---\r\n".YamlHeader()
+                    };
+
+                    p.Url = new LinkHelper().EvaluateLink( siteContext, p );
+                    siteContext.Pages.Add( p );
+                }
+            }
         }
     }
 }

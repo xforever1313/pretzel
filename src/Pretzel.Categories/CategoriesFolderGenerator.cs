@@ -10,8 +10,10 @@ namespace Pretzel.Categories
     [Export( typeof( IBeforeProcessingTransform ) )]
     public class CategoriesFolderGenerator : BaseFolderGenerator
     {
+        internal const string CategoryFolderName = "category";
+
         public CategoriesFolderGenerator()
-            : base("category")
+            : base(CategoryFolderName)
         {
         }
 
