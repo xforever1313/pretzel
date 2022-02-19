@@ -34,7 +34,7 @@ namespace Pretzel.Categories
             }
         }
 
-        public static IReadOnlyDictionary<Page, IEnumerable<Page>> GetCategoryPages( this SiteContext siteContext )
+        public static IEnumerable<CategoryPage> GetCategoryPages( this SiteContext siteContext )
         {
             ZCategoryCache cache = ZCategoryCache.CurrentCache;
             return cache.CategoryPages;

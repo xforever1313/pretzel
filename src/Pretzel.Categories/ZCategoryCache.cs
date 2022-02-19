@@ -24,7 +24,7 @@ namespace Pretzel.Categories
 
         public IReadOnlyDictionary<string, IEnumerable<string>> CategoryNames { get; private set; }
 
-        public IReadOnlyDictionary<Page, IEnumerable<Page>> CategoryPages { get; private set; }
+        public IEnumerable<CategoryPage> CategoryPages { get; private set; }
 
         public static ZCategoryCache CurrentCache { get; private set; }
 
@@ -100,9 +100,27 @@ namespace Pretzel.Categories
                 categoriesAsStrings.ToDictionary( kv => kv.Key, kv => kv.Value.AsEnumerable() )
             );
 
-            this.CategoryPages = new ReadOnlyDictionary<Page, IEnumerable<Page>>(
-                categoriesAsPages.ToDictionary( kv => kv.Key, kv => kv.Value.AsEnumerable() )
-            );
+            var categoryPages = new List<CategoryPage>();
+            foreach( var page in categoriesAsPages )
+            {
+                var topLevelPage = new CategoryPage
+                {
+                    CategoryName = page.Key.TryGetCategory(),
+                    Page = page.Key,
+                };
+                foreach( var subPage in page.Value )
+                {
+                    var subCategoryPage = new CategoryPage
+                    {
+                        CategoryName = subPage.TryGetSubCategory(),
+                        Page = subPage
+                    };
+                    topLevelPage.AddSubPage( subCategoryPage );
+                }
+                categoryPages.Add( topLevelPage );
+            }
+
+            this.CategoryPages = categoryPages.AsReadOnly();
 
             CurrentCache = this;
         }
