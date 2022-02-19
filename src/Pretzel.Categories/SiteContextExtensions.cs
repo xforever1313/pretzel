@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.Categories
@@ -32,73 +34,72 @@ namespace Pretzel.Categories
             }
         }
 
-        public static IDictionary<Page, IList<Page>> GetCategoryPages( this SiteContext siteContext )
+        public static IReadOnlyDictionary<Page, IEnumerable<Page>> GetCategoryPages( this SiteContext siteContext )
         {
-            siteContext.ThrowIfSubCategoriesDisabled();
+            ZCategoryCache cache = ZCategoryCache.CurrentCache;
+            return cache.CategoryPages;
+        }
 
-            var subCategoriesAsStrings = new Dictionary<string, HashSet<string>>();
+        /// <summary>
+        /// Gets all of the posts from the given category.
+        /// </summary>
+        /// <returns>
+        /// A dictionary that contains all of the categories.
+        /// An empty string represents the passed in category.
+        /// If the key contains a name, its a sub-category of that category.
+        ///
+        /// This will at the very least return a dictionary containing an empty string
+        /// key.  The value may be empty, however.
+        /// </returns>
+        public static IReadOnlyDictionary<string, IEnumerable<Page>> GetPostsFromCategory(
+            this SiteContext siteContext,
+            string category
+        )
+        {
+            ZCategoryCache cache = ZCategoryCache.CurrentCache;
 
-            var subCategories = new Dictionary<Page, IList<Page>>();
+            var dict = new Dictionary<string, List<Page>>();
+            dict[string.Empty] = new List<Page>();
 
-            foreach( Page post in siteContext.Posts )
+            if( cache.CategoryNames.ContainsKey( category ) == false )
             {
-                string postSubcatgory = post.TryGetSubCategory();
-                foreach( string category in post.Categories )
-                {
-                    if( subCategoriesAsStrings.ContainsKey( category ) == false )
-                    {
-                        subCategoriesAsStrings[category] = new HashSet<string>();
-                    }
-
-                    if( subCategoriesAsStrings[category].Contains( postSubcatgory ) == false )
-                    {
-                        if( string.IsNullOrWhiteSpace( postSubcatgory ) == false )
-                        {
-                            subCategoriesAsStrings[category].Add( postSubcatgory );
-                        }
-                    }
-                }
+                throw new ArgumentException(
+                    "Category not found: " + category,
+                    nameof( category )
+                );
             }
 
-            var parentCategoriesAdded = new HashSet<string>();
-            foreach( Page page in siteContext.Pages )
+            var subCatgories = new HashSet<string>( cache.CategoryNames[category] );
+            foreach( Page post in siteContext.Posts )
             {
-                string pageCategory = page.TryGetCategory();
+                string pageCategory = post.TryGetCategory();
                 if( string.IsNullOrWhiteSpace( pageCategory ) )
                 {
                     continue;
                 }
 
-                if(
-                    subCategoriesAsStrings.ContainsKey( pageCategory ) &&
-                    ( parentCategoriesAdded.Contains( pageCategory ) == false )
-                )
+                string subCategory = post.TryGetSubCategory();
+                // If there is no sub-category, it only goes in the top-level.
+                // Add it to the top-level category.
+                if( pageCategory.Equals( category ) && string.IsNullOrWhiteSpace( subCategory ) )
                 {
-                    subCategories[page] = new List<Page>();
-                    parentCategoriesAdded.Add( pageCategory );
+                    subCategory = string.Empty;
+                }
+                else if( subCatgories.Contains( subCategory ) == false )
+                {
+                    continue;
+                }
+                else if( dict.ContainsKey( subCategory ) == false )
+                {
+                    dict[subCategory] = new List<Page>();
                 }
 
-                var subcategoriesAdded = new HashSet<string>();
-                foreach( Page page2 in siteContext.Pages )
-                {
-                    string pageSubcategory = page2.TryGetSubCategory();
-                    if( string.IsNullOrWhiteSpace( pageSubcategory ) )
-                    {
-                        continue;
-                    }
-
-                    if(
-                        subCategoriesAsStrings[pageCategory].Contains( pageSubcategory ) &&
-                        ( subcategoriesAdded.Contains( pageSubcategory ) == false )
-                    )
-                    {
-                        subCategories[page].Add( page2 );
-                        subcategoriesAdded.Add( pageSubcategory );
-                    }
-                }
+                dict[subCategory].Add( post );
             }
 
-            return subCategories;
+            return new ReadOnlyDictionary<string, IEnumerable<Page>>(
+                dict.ToDictionary( kv => kv.Key, kv => kv.Value.AsEnumerable() )
+            );
         }
 
         public static IEnumerable<Page> GetPostsFromSubCategory( this SiteContext siteContext, string subCategory )
