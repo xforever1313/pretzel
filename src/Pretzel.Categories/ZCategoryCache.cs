@@ -115,9 +115,40 @@ namespace Pretzel.Categories
                         CategoryName = subPage.TryGetSubCategory(),
                         Page = subPage
                     };
+
                     topLevelPage.AddSubPage( subCategoryPage );
                 }
                 categoryPages.Add( topLevelPage );
+            }
+
+            foreach( Page post in siteContext.Posts )
+            {
+                string category = post.TryGetCategory();
+                string subCat = post.TryGetSubCategory();
+                foreach( CategoryPage topLevelCat in categoryPages )
+                {
+                    if( topLevelCat.CategoryName != category )
+                    {
+                        continue;
+                    }
+
+                    if( string.IsNullOrWhiteSpace( subCat ) )
+                    {
+                        // If there is no sub-category, just add
+                        // it to the top-level category.
+                        topLevelCat.AddPost( post );
+                    }
+                    else
+                    {
+                        foreach( CategoryPage subCatPage in topLevelCat.SubCategories )
+                        {
+                            if( subCatPage.CategoryName == subCat )
+                            {
+                                subCatPage.AddPost( post );
+                            }
+                        }
+                    }
+                }
             }
 
             this.CategoryPages = categoryPages.AsReadOnly();

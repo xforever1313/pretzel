@@ -9,12 +9,17 @@ namespace Pretzel.Categories
 
         private readonly List<CategoryPage> subCategories;
 
+        private readonly List<Page> posts;
+
         // ---------------- Constructor ----------------
 
         public CategoryPage()
         {
             this.subCategories = new List<CategoryPage>();
             this.SubCategories = this.subCategories.AsReadOnly();
+
+            this.posts = new List<Page>();
+            this.Posts = this.posts.AsReadOnly();
         }
 
         // ---------------- Properties ----------------
@@ -27,11 +32,18 @@ namespace Pretzel.Categories
 
         public IEnumerable<CategoryPage> SubCategories { get; private set; }
 
+        public IEnumerable<Page> Posts { get; private set; }
+
         // ---------------- Functions ----------------
 
         internal void AddSubPage( CategoryPage subPage )
         {
             this.subCategories.Add( subPage );
+        }
+
+        internal void AddPost( Page post )
+        {
+            this.posts.Add( post );
         }
     }
 }

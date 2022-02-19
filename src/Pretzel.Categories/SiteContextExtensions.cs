@@ -40,66 +40,22 @@ namespace Pretzel.Categories
             return cache.CategoryPages;
         }
 
-        /// <summary>
-        /// Gets all of the posts from the given category.
-        /// </summary>
-        /// <returns>
-        /// A dictionary that contains all of the categories.
-        /// An empty string represents the passed in category.
-        /// If the key contains a name, its a sub-category of that category.
-        ///
-        /// This will at the very least return a dictionary containing an empty string
-        /// key.  The value may be empty, however.
-        /// </returns>
-        public static IReadOnlyDictionary<string, IEnumerable<Page>> GetPostsFromCategory(
+        public static CategoryPage GetTopLevelCategory(
             this SiteContext siteContext,
-            string category
+            string categoryName
         )
         {
             ZCategoryCache cache = ZCategoryCache.CurrentCache;
-
-            var dict = new Dictionary<string, List<Page>>();
-            dict[string.Empty] = new List<Page>();
-
-            if( cache.CategoryNames.ContainsKey( category ) == false )
+            CategoryPage category = cache.CategoryPages.FirstOrDefault( c => c.CategoryName.Equals( categoryName ) );
+            if( category is null )
             {
                 throw new ArgumentException(
-                    "Category not found: " + category,
-                    nameof( category )
+                    $"Can not find category {categoryName}",
+                    nameof( categoryName )
                 );
             }
 
-            var subCatgories = new HashSet<string>( cache.CategoryNames[category] );
-            foreach( Page post in siteContext.Posts )
-            {
-                string pageCategory = post.TryGetCategory();
-                if( string.IsNullOrWhiteSpace( pageCategory ) )
-                {
-                    continue;
-                }
-
-                string subCategory = post.TryGetSubCategory();
-                // If there is no sub-category, it only goes in the top-level.
-                // Add it to the top-level category.
-                if( pageCategory.Equals( category ) && string.IsNullOrWhiteSpace( subCategory ) )
-                {
-                    subCategory = string.Empty;
-                }
-                else if( subCatgories.Contains( subCategory ) == false )
-                {
-                    continue;
-                }
-                else if( dict.ContainsKey( subCategory ) == false )
-                {
-                    dict[subCategory] = new List<Page>();
-                }
-
-                dict[subCategory].Add( post );
-            }
-
-            return new ReadOnlyDictionary<string, IEnumerable<Page>>(
-                dict.ToDictionary( kv => kv.Key, kv => kv.Value.AsEnumerable() )
-            );
+            return category;
         }
 
         public static IEnumerable<Page> GetPostsFromSubCategory( this SiteContext siteContext, string subCategory )
