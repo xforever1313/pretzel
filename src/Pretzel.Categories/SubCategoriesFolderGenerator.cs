@@ -59,7 +59,11 @@ namespace Pretzel.Categories
                 {
                     dict[categoryName] = new List<string>();
                 }
-                dict[categoryName].Add( subCategoryName );
+
+                if( dict[categoryName].Contains( subCategoryName ) == false )
+                {
+                    dict[categoryName].Add( subCategoryName );
+                }
             }
 
             foreach( KeyValuePair<string, List<string>> kvp in dict )

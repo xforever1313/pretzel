@@ -15,7 +15,7 @@ namespace Pretzel.Categories
                 return string.Empty;
             }
 
-            return page.Bag[CategoryPageKey]?.ToString();
+            return page.Bag[CategoryPageKey]?.ToString().Trim();
         }
 
         public static string TryGetSubCategory( this Page page )
@@ -25,7 +25,7 @@ namespace Pretzel.Categories
                 return string.Empty;
             }
 
-            return page.Bag[SubCategoryPageKey]?.ToString();
+            return page.Bag[SubCategoryPageKey]?.ToString().Trim();
         }
     }
 }
