@@ -22,5 +22,19 @@ namespace Pretzel.SethExtensions
                 return page.Bag[key].ToString();
             }
         }
+
+        public static string GetExerpt( this Page page )
+        {
+            const string key = "excerpt";
+
+            if( page.Bag.ContainsKey( key ) )
+            {
+                return page.Bag[key].ToString();
+            }
+            else
+            {
+                return page.Content;
+            }
+        }
     }
 }

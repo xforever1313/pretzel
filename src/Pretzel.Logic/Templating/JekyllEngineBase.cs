@@ -165,6 +165,12 @@ namespace Pretzel.Logic.Templating
                     context.Content = RenderContent(page.File, RenderTemplate(context.Content, context));
                     context.FullContent = context.Content;
                     context.Bag["excerpt"] = GetContentExcerpt(context.Content, excerptSeparator);
+
+                    // Don't override the excerpt if one already exists.
+                    if( context.Page.Bag.ContainsKey( "excerpt" ) == false )
+                    {
+                        context.Page.Bag["excerpt"] = context.Bag["excerpt"].ToString();
+                    }
                 }
                 catch (Exception ex)
                 {
