@@ -30,7 +30,10 @@ namespace Pretzel.Categories
 
         public void Transform( SiteContext siteContext )
         {
-            siteContext.ThrowIfSubCategoriesDisabled();
+            if( siteContext.IsSubcategoriesEnabled() == false )
+            {
+                return;
+            }
 
             // Make categories as pages.
             var categoriesAsPages = new Dictionary<Page, List<Page>>();
