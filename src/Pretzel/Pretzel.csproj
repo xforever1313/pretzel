@@ -18,12 +18,12 @@
     <ApplicationIcon>pretzel.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition="'$(GlobalTool)' != true">
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(GlobalTool)' == true">
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>pretzel</ToolCommandName>
-    <TargetFramewor>netcoreapp3.1</TargetFramewor>
+    <TargetFramework>net6.0</TargetFramework>
     <PackageOutputPath>../../artifacts</PackageOutputPath>
     <PackageId>Pretzel.Tool</PackageId>
   </PropertyGroup>
