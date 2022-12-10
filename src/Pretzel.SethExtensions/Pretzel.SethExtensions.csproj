@@ -1,11 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Pretzel.Logic\Pretzel.Logic.csproj" />
   </ItemGroup>
+
+  <Import Project="..\ActivityPub.Models\src\ActivityPub.Models\ActivityPub.Models.projitems" Label="Shared" />
 
 </Project>

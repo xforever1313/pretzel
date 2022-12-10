@@ -1,0 +1,3 @@
+[submodule "src/ActivityPub.Models"]
+	path = src/ActivityPub.Models
+	url = https://github.com/xforever1313/ActivityPub.Models.git
