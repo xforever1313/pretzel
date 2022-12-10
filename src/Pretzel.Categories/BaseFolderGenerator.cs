@@ -11,11 +11,19 @@ namespace Pretzel.Categories
     public abstract class BaseFolderGenerator : IBeforeProcessingTransform
     {
         private readonly string folderName = string.Empty;
+        private readonly string layoutName = string.Empty;
+
         private bool stopFolderGeneration;
 
-        protected BaseFolderGenerator(string folderToGenerate)
+        protected BaseFolderGenerator( string folderToGenerate ) :
+            this( folderToGenerate, folderToGenerate )
+        {
+        }
+
+        protected BaseFolderGenerator(string folderToGenerate, string layoutName)
         {
             this.folderName = folderToGenerate;
+            this.layoutName = layoutName;
         }
 
         public string[] GetArguments(string command) => command == "taste" || command == "bake" ? new[] { $"n{this.folderName}" } : new string[0];
@@ -23,7 +31,7 @@ namespace Pretzel.Categories
         public void Transform(SiteContext siteContext)
         {
             var layout = "layout";
-            var layoutConfigKey = $"{this.folderName}_pages_layout";
+            var layoutConfigKey = $"{this.layoutName}_pages_layout";
 
             if (this.stopFolderGeneration)
             {
@@ -39,11 +47,12 @@ namespace Pretzel.Categories
             {
                 var p = new Page
                 {
-                    Content = $"---\r\n layout: {layout} \r\n {this.folderName}: {name} \r\n---\r\n",
+                    Title = name,
+                    Content = $"---\r\n layout: {layout} \r\n {this.layoutName}: {name} \r\n---\r\n",
                     File = Path.Combine(siteContext.SourceFolder, this.folderName, SlugifyFilter.Slugify(name), "index.html"),
                     Filepath = Path.Combine(siteContext.OutputFolder, this.folderName, SlugifyFilter.Slugify(name), "index.html"),
                     OutputFile = Path.Combine(siteContext.OutputFolder, this.folderName, SlugifyFilter.Slugify(name), "index.html"),
-                    Bag = $"---\r\n layout: {layout} \r\n {this.folderName}: {name} \r\n---\r\n".YamlHeader()
+                    Bag = $"---\r\n layout: {layout} \r\n {this.layoutName}: {name} \r\n---\r\n".YamlHeader()
                 };
 
                 p.Url = new LinkHelper().EvaluateLink(siteContext, p);

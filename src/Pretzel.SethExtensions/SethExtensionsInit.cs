@@ -1,5 +1,5 @@
 //
-//          Copyright Seth Hendrick 2020.
+//          Copyright Seth Hendrick 2020-2022.
 // Distributed under the Microsoft Public License (MS-PL).
 //
 
