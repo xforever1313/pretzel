@@ -26,9 +26,7 @@ namespace Pretzel.SethExtensions.ActivityPub
                 Subject = $"acct:{config[$"{settingsPrefix}_username"]}@{config["urlnohttp"]}",
                 Links = new WebFingerLinks
                 {
-                    Href = new Uri(
-                        context.UrlCombine( $"{config[$"{settingsPrefix}_directory"]}/profile.json" )
-                    )
+                    Href = new Uri( context.GetProfileJsonUrl() )
                 }
             };
 

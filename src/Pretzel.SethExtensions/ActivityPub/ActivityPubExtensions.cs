@@ -40,5 +40,20 @@ namespace Pretzel.SethExtensions.ActivityPub
         {
             return context.UrlCombine( $"{context.Config[$"{settingsPrefix}_directory"]}/" );
         }
+
+        public static string GetProfileJsonUrl( this SiteContext context )
+        {
+            return context.UrlCombine( $"{context.Config[$"{settingsPrefix}_directory"]}/profile.json" );
+        }
+
+        public static string GetOutboxUrl( this SiteContext context )
+        {
+            return context.UrlCombine( $"{context.Config[$"{settingsPrefix}_directory"]}/outbox.json" );
+        }
+
+        public static string GetInboxUrl( this SiteContext context )
+        {
+            return context.UrlCombine( $"{context.Config[$"{settingsPrefix}_directory"]}/inbox.json" );
+        }
     }
 }

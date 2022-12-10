@@ -34,29 +34,9 @@ namespace Pretzel.SethExtensions.ActivityPub
                 Type = "Service",
                 Url = new Uri( baseUrl ),
 
-                // ID must be the base URL.
-                Id = baseUrl
+                // ID must be the same as the URL to this page (its a self-reference).
+                Id = context.GetProfileJsonUrl()
             };
-
-            if( config.GenerateInbox() )
-            {
-                profile = profile with
-                {
-                    Inbox = new Uri(
-                        $"{context.GetActPubUrl()}inbox.json"
-                    )
-                };
-            }
-
-            if( config.GenerateOutbox() )
-            {
-                profile = profile with
-                {
-                    Outbox = new Uri(
-                        $"{context.GetActPubUrl()}outbox.json"
-                    )
-                };
-            }
 
             if( config.ContainsKey( $"{settingsPrefix}_profileurl" ) )
             {
@@ -65,6 +45,22 @@ namespace Pretzel.SethExtensions.ActivityPub
                     Url = new Uri(
                         context.UrlCombine( config[$"{settingsPrefix}_profileurl"].ToString() )
                     )
+                };
+            }
+
+            if( config.GenerateInbox() )
+            {
+                profile = profile with
+                {
+                    Inbox = new Uri( context.GetInboxUrl() )
+                };
+            }
+
+            if( config.GenerateOutbox() )
+            {
+                profile = profile with
+                {
+                    Outbox = new Uri( context.GetOutboxUrl() )
                 };
             }
 
@@ -81,7 +77,7 @@ namespace Pretzel.SethExtensions.ActivityPub
                 attachments.Add(
                     new Attachment
                     {
-                        Name = "WebSite",
+                        Name = "Website",
                         Type = "PropertyValue",
                         Value = GetAttachmentUrl( config["url"].ToString() )
 
@@ -123,11 +119,11 @@ namespace Pretzel.SethExtensions.ActivityPub
                 };
             }
 
-            if( config.ContainsKey( $"{settingsPrefix}_published" ) )
+            if( config.ContainsKey( $"{settingsPrefix}_created" ) )
             {
                 profile = profile with
                 {
-                    Published = config[$"{settingsPrefix}_published"].ToString()
+                    Published = config[$"{settingsPrefix}_created"].ToString()
                 };
             }
 
@@ -139,11 +135,11 @@ namespace Pretzel.SethExtensions.ActivityPub
                 };
             }
 
-            if( config.ContainsKey( $"{settingsPrefix}_title" ) )
+            if( config.ContainsKey( $"title" ) )
             {
                 profile = profile with
                 {
-                    Name = config[$"{settingsPrefix}_title"].ToString()
+                    Name = config[$"title"].ToString()
                 };
             }
 
@@ -166,8 +162,9 @@ namespace Pretzel.SethExtensions.ActivityPub
                 {
                     PublicKey = new ProfilePublicKey
                     {
-                        Id = $"{baseUrl}#main-key",
-                        Owner = baseUrl,
+                        // ID Must match the Profile's ID.
+                        Id = $"{profile.Id}#main-key",
+                        Owner = profile.Id.ToString(),
                         PublicKeyPem = publicKeyBuilder.ToString()
                     }
                 };
