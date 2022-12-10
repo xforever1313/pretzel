@@ -5,7 +5,6 @@
 
 using System.Composition;
 using System.IO;
-using System.Security.Permissions;
 using System.Text.Json;
 using Pretzel.Logic.Extensibility;
 using Pretzel.Logic.Templating.Context;
@@ -42,6 +41,11 @@ namespace Pretzel.SethExtensions.ActivityPub
         ///
         /// following - string list of who the "account" should follow.
         ///
+        /// profileurl - The relative URL from the base url of where
+        ///              the "profile" should be.  Usually a URL
+        ///              to all posts.  If not specified, this becomes
+        ///              the base URL.
+        /// 
         /// username  - The username that is used.  This becomes the
         ///             "preferred username" used in activity pub.
         ///
@@ -85,6 +89,7 @@ namespace Pretzel.SethExtensions.ActivityPub
             // - profile.json
             // - webfinger
             WriteWebFinger( outputDirectory, context );
+            WriteProfile( outputDirectory, context );
         }
 
         private static void WriteWebFinger( DirectoryInfo outputDir, SiteContext context )
@@ -100,6 +105,23 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             FileInfo outFile = new FileInfo(
                 Path.Combine( outputDir.FullName, "webfinger" )
+            );
+            File.WriteAllText( outFile.FullName, jsonString );
+        }
+
+        private static void WriteProfile( DirectoryInfo outputDir, SiteContext context )
+        {
+            var profile = ProfileExtensions.FromSiteContext( context );
+            string jsonString = JsonSerializer.Serialize(
+                profile,
+                new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                }
+            );
+
+            FileInfo outFile = new FileInfo(
+                Path.Combine( outputDir.FullName, "profile.json" )
             );
             File.WriteAllText( outFile.FullName, jsonString );
         }
