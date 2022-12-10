@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30523.141
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pretzel", "Pretzel\Pretzel.csproj", "{198E7970-CBF7-4BD8-8E36-4E07BB29C3AF}"
 EndProject
@@ -19,7 +19,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pretzel.Categories", "Pretzel.Categories\Pretzel.Categories.csproj", "{1A045CB0-2823-4539-83BB-2B94E7BB4DAF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pretzel.SethExtensions", "Pretzel.SethExtensions\Pretzel.SethExtensions.csproj", "{2D0F77B6-8F8F-46C2-B465-271F8A03A2B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pretzel.SethExtensions", "Pretzel.SethExtensions\Pretzel.SethExtensions.csproj", "{2D0F77B6-8F8F-46C2-B465-271F8A03A2B6}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ActivityPub.Models", "ActivityPub.Models\src\ActivityPub.Models\ActivityPub.Models.shproj", "{27570BD7-A39C-4755-8521-ACDB4EBACED4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,5 +55,9 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D04F948E-1088-41DC-930E-DDC3748DFFA8}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		ActivityPub.Models\src\ActivityPub.Models\ActivityPub.Models.projitems*{27570bd7-a39c-4755-8521-acdb4ebaced4}*SharedItemsImports = 13
+		ActivityPub.Models\src\ActivityPub.Models\ActivityPub.Models.projitems*{2d0f77b6-8f8f-46c2-b465-271f8a03a2b6}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal
