@@ -3,8 +3,10 @@
 // Distributed under the Microsoft Public License (MS-PL).
 //
 
+using System;
 using Pretzel.Logic;
 using Pretzel.Logic.Templating.Context;
+using YamlDotNet.Core.Tokens;
 
 namespace Pretzel.SethExtensions.ActivityPub
 {
@@ -18,22 +20,32 @@ namespace Pretzel.SethExtensions.ActivityPub
 
         public static bool GenerateInbox( this IConfiguration config )
         {
-            if( config.ContainsKey( $"{settingsPrefix}_inbox" ) == false )
+            string key = $"{settingsPrefix}_inbox";
+
+            if( config.ContainsKey( key ) == false )
             {
                 return false;
             }
-
-            return bool.Parse( config[$"{settingsPrefix}_inbox"].ToString() );
+            else if( bool.TryParse( config[key].ToString(), out bool generate ) )
+            {
+                return generate;
+            }
+            throw new ArgumentException( $"'{key}' MUST be set to true or false." );
         }
 
         public static bool GenerateOutbox( this IConfiguration config )
         {
-            if( config.ContainsKey( $"{settingsPrefix}_outbox" ) == false )
+            string key = $"{settingsPrefix}_outbox";
+
+            if( config.ContainsKey( key ) == false )
             {
                 return false;
             }
-
-            return bool.Parse( config[$"{settingsPrefix}_outbox"].ToString() );
+            else if( bool.TryParse( config[key].ToString(), out bool generate ) )
+            {
+                return generate;
+            }
+            throw new ArgumentException( $"'{key}' MUST be set to true or false." );
         }
 
         public static string GetActPubUrl( this SiteContext context )

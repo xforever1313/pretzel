@@ -25,7 +25,7 @@ namespace Pretzel.SethExtensions.ActivityPub
         {
             IConfiguration config = context.Config;
 
-            string baseUrl = config["url"].ToString();
+            string baseUrl = GetBaseUrl( config );
 
             var profile = new Profile
             {
@@ -38,12 +38,12 @@ namespace Pretzel.SethExtensions.ActivityPub
                 Id = context.GetProfileJsonUrl()
             };
 
-            if( config.ContainsKey( $"{settingsPrefix}_profileurl" ) )
+            if( TryGetProfileUrl( config, out string profileUrl ) )
             {
                 profile = profile with
                 {
                     Url = new Uri(
-                        context.UrlCombine( config[$"{settingsPrefix}_profileurl"].ToString() )
+                        context.UrlCombine( profileUrl )
                     )
                 };
             }
@@ -111,11 +111,11 @@ namespace Pretzel.SethExtensions.ActivityPub
                 profile = profile with { Attachments = attachments.ToArray() };
             }
 
-            if( config.ContainsKey( $"{settingsPrefix}_icon" ) )
+            if( TryGetIconUrl( config, out string iconUrl ) )
             {
                 profile = profile with
                 {
-                    Icon = new Uri( config[$"{settingsPrefix}_icon"].ToString() )
+                    Icon = new Uri( iconUrl )
                 };
             }
 
@@ -143,11 +143,11 @@ namespace Pretzel.SethExtensions.ActivityPub
                 };
             }
 
-            if( config.ContainsKey( $"{settingsPrefix}_publickeyfile" ) )
+            if( TryGetPublicKeyFileLocation( config, out string fileLocation ) )
             {
                 string file = Path.Combine(
                     context.SourceFolder,
-                    config[$"{settingsPrefix}_publickeyfile"].ToString()
+                    fileLocation
                 );
 
                 var publicKeyBuilder = new StringBuilder();
@@ -179,6 +179,73 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             return
                 @$"<a href=""{baseUrl}"" rel=""me nofollow noopener noreferrer"" target=""_blank"">{baseUrl}</a>";
+        }
+
+        private static string GetBaseUrl( IConfiguration config )
+        {
+            string? baseUrl = config["url"].ToString();
+
+            // Base URL is required.  Throw if its null.
+            ArgumentNullException.ThrowIfNull( baseUrl );
+
+            return baseUrl;
+        }
+
+        private static bool TryGetProfileUrl( IConfiguration config, out string profileUrl )
+        {
+            if( config.ContainsKey( $"{settingsPrefix}_profileurl" ) == false )
+            {
+                profileUrl = "";
+                return false;
+            }
+
+            string? value = config[$"{settingsPrefix}_profileurl"].ToString();
+            if( value is null )
+            {
+                profileUrl = "";
+                return false;
+            }
+
+            profileUrl = value;
+            return true;
+        }
+
+        private static bool TryGetIconUrl( IConfiguration config, out string iconUrl )
+        {
+            if( config.ContainsKey( $"{settingsPrefix}_icon" ) == false )
+            {
+                iconUrl = "";
+                return false;
+            }
+
+            string? value = config[$"{settingsPrefix}_icon"].ToString();
+            if( value is null )
+            {
+                iconUrl = "";
+                return false;
+            }
+
+            iconUrl = value;
+            return true;
+        }
+
+        private static bool TryGetPublicKeyFileLocation( IConfiguration config, out string fileLocation )
+        {
+            if( config.ContainsKey( $"{settingsPrefix}_publickeyfile" ) == false )
+            {
+                fileLocation = "";
+                return false;
+            }
+
+            string? value = config[$"{settingsPrefix}_publickeyfile"].ToString();
+            if( value is null )
+            {
+                fileLocation = "";
+                return false;
+            }
+
+            fileLocation = value;
+            return true;
         }
     }
 }

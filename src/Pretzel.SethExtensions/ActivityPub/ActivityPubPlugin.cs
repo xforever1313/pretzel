@@ -3,6 +3,7 @@
 // Distributed under the Microsoft Public License (MS-PL).
 //
 
+using System;
 using System.Composition;
 using System.IO;
 using System.Text.Json;
@@ -68,13 +69,21 @@ namespace Pretzel.SethExtensions.ActivityPub
         /// <param name="context"></param>
         public void Transform( SiteContext context )
         {
-            if( context.Config.ContainsKey( $"{SettingPrefix}_directory" ) == false )
+            string directorKey = $"{SettingPrefix}_directory";
+            if( context.Config.ContainsKey( directorKey ) == false )
+            {
+                return;
+            }
+            string? directoryValue = context.Config["actpub_directory"].ToString();
+            if( directoryValue is null )
             {
                 return;
             }
 
+            Console.WriteLine( $"Activity pub enabled.  Activity pub directory is in: {directoryValue}" );
+
             DirectoryInfo outputDirectory = new DirectoryInfo(
-                Path.Combine( context.OutputFolder, context.Config["actpub_directory"].ToString() )
+                Path.Combine( context.OutputFolder, directoryValue )
             );
 
             if( outputDirectory.Exists == false )

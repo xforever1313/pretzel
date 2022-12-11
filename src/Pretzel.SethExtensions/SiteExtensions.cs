@@ -3,6 +3,7 @@
 // Distributed under the Microsoft Public License (MS-PL).
 //
 
+using System;
 using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.SethExtensions
@@ -15,7 +16,12 @@ namespace Pretzel.SethExtensions
         /// </summary>
         public static string UrlCombine( this SiteContext context, string urlLocation )
         {
-            string url = context.Config["url"].ToString();
+            string? url = context.Config["url"].ToString();
+            if( url is null )
+            {
+                throw new ArgumentNullException( nameof( url ), "'url' must be specified in site config." );
+            }
+
             url = url.TrimEnd( '/' );
             urlLocation = urlLocation.TrimStart( '/' );
             return $"{url}/{urlLocation}";
