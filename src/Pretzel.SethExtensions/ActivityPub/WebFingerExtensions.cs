@@ -24,9 +24,13 @@ namespace Pretzel.SethExtensions.ActivityPub
             return $"{config[$"{settingsPrefix}_username"]}@{config["urlnohttp"]}";
         }
 
+        public static string GetAddressName( this SiteContext context )
+        {
+            return $"@{GetWebFingerName( context )}";
+        }
+
         public static WebFinger FromSiteContext( SiteContext context )
         {
-            IConfiguration config = context.Config;
             var webFinger = new WebFinger
             {
                 Subject = $"acct:{GetWebFingerName( context )}",

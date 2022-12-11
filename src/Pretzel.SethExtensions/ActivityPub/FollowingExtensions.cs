@@ -23,7 +23,7 @@ namespace Pretzel.SethExtensions.ActivityPub
                 return null;
             }
 
-            string webFingerName = context.GetWebFingerName();
+            string webFingerName = context.GetAddressName();
 
             var following = new List<Following>();
             foreach( string follow in followingList )
@@ -31,7 +31,7 @@ namespace Pretzel.SethExtensions.ActivityPub
                 following.Add(
                     new Following
                     {
-                        Actor  = $"@{webFingerName}",
+                        Actor  = $"{webFingerName}",
                         Object = follow
                     }
                 );
@@ -40,7 +40,7 @@ namespace Pretzel.SethExtensions.ActivityPub
             return new FollowingCollection
             {
                 Following = following.ToArray(),
-                Summary = $"Who @{webFingerName} is following",
+                Summary = $"Who {webFingerName} is following",
 
                 // Unsure if ID is supposed to be the URL
                 // or the ID of the actor.  We'll try URL

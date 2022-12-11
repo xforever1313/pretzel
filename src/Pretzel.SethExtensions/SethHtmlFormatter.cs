@@ -13,6 +13,10 @@ namespace Pretzel.SethExtensions
     /// </summary>
     public class SethHtmlFormatter : CommonMark.Formatters.HtmlFormatter
     {
+        public static readonly string ATagProperties =
+            @"target=""_blank"" rel=""noopener noreferrer nofollow""";
+
+
         // ---------------- Constructor ----------------
 
         public SethHtmlFormatter( System.IO.TextWriter target, CommonMarkSettings settings )
@@ -56,7 +60,7 @@ namespace Pretzel.SethExtensions
                 // start and end of each node may be visited separately
                 if( isOpening )
                 {
-                    this.Write( "<a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"" );
+                    this.Write( $"<a {ATagProperties} href=\"" );
                     this.WriteEncodedUrl( inline.TargetUrl );
                     this.Write( "\">" );
                 }

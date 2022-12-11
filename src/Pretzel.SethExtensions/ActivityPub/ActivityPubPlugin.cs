@@ -7,7 +7,6 @@ using System;
 using System.Composition;
 using System.IO;
 using System.Text.Json;
-using ActivityPub.Models;
 using Pretzel.Logic.Extensibility;
 using Pretzel.Logic.Templating.Context;
 
@@ -101,6 +100,7 @@ namespace Pretzel.SethExtensions.ActivityPub
             WriteWebFinger( outputDirectory, context );
             WriteProfile( outputDirectory, context );
             WriteFollowing( outputDirectory, context );
+            WriteOutbox( outputDirectory, context );
         }
 
         private static void WriteWebFinger( DirectoryInfo outputDir, SiteContext context )
@@ -150,6 +150,23 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             FileInfo outFile = new FileInfo(
                 Path.Combine( outputDir.FullName, "following.json" )
+            );
+            File.WriteAllText( outFile.FullName, jsonString );
+        }
+
+        private static void WriteOutbox( DirectoryInfo outputDir, SiteContext context )
+        {
+            var outbox = OutboxExtensions.FromSiteContext( context );
+            string jsonString = JsonSerializer.Serialize(
+                outbox,
+                new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                }
+            );
+
+            FileInfo outFile = new FileInfo(
+                Path.Combine( outputDir.FullName, "outbox.json" )
             );
             File.WriteAllText( outFile.FullName, jsonString );
         }
