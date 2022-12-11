@@ -64,6 +64,14 @@ namespace Pretzel.SethExtensions.ActivityPub
                 };
             }
 
+            if( config.GetFollowing() is not null )
+            {
+                profile = profile with
+                {
+                    Following = new Uri( context.GetFollowingUrl() )
+                };
+            }
+
             if( config.ContainsKey( $"{settingsPrefix}_username" ) )
             {
                 profile = profile with
