@@ -52,8 +52,7 @@ namespace Pretzel.SethExtensions.ActivityPub
                         {
                             Content = status,
                             // Mastodon looks at the name if it somehow can't
-                            // find the content.
-                            Name = status,
+                            // find the content.  But we have content, so we should be okay?
                             Id = url,
                             Url = new Uri( url ),
                             // Used to determine the profile which authored the status.
@@ -62,8 +61,9 @@ namespace Pretzel.SethExtensions.ActivityPub
                             Published = post.Date,
                             // Per mastodon's docs, this should be "as:Public"
                             // to show public status.
-                            // Not sure if this is 100% correct though.
-                            To = new string[] { "as:Public" }
+                            // Per this URL, it appears as though it needs to be this.
+                            // https://blog.joinmastodon.org/2018/06/how-to-implement-a-basic-activitypub-server/
+                            To = new string[] { "https://www.w3.org/ns/activitystreams#Public" }
 
                             // No summary, it is the CW text.
                         }
