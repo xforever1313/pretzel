@@ -4,9 +4,10 @@
 //
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Pretzel.Logic;
 using Pretzel.Logic.Templating.Context;
-using YamlDotNet.Core.Tokens;
 
 namespace Pretzel.SethExtensions.ActivityPub
 {
@@ -48,6 +49,26 @@ namespace Pretzel.SethExtensions.ActivityPub
             throw new ArgumentException( $"'{key}' MUST be set to true or false." );
         }
 
+        /// <returns>
+        /// null if there are is no one to follow.
+        /// </returns>
+        public static IEnumerable<string>? GetFollowing( this IConfiguration config )
+        {
+            string key = $"{settingsPrefix}_following";
+            if( config.ContainsKey( key ) == false )
+            {
+                return null;
+            }
+
+            IEnumerable<string>? following = config[key] as IEnumerable<string>;
+            if( following is null )
+            {
+                throw new ArgumentException( $"'{key}' must be a list type." );
+            }
+
+            return following;
+        }
+
         public static string GetActPubUrl( this SiteContext context )
         {
             return context.UrlCombine( $"{context.Config[$"{settingsPrefix}_directory"]}/" );
@@ -66,6 +87,11 @@ namespace Pretzel.SethExtensions.ActivityPub
         public static string GetInboxUrl( this SiteContext context )
         {
             return context.UrlCombine( $"{context.Config[$"{settingsPrefix}_directory"]}/inbox.json" );
+        }
+
+        public static string GetFollowingUrl( this SiteContext context )
+        {
+            return context.UrlCombine( $"{context.Config[$"{settingsPrefix}_directory"]}/following.json" );
         }
     }
 }

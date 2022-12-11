@@ -18,12 +18,18 @@ namespace Pretzel.SethExtensions.ActivityPub
 
         // ---------------- Functions ----------------
 
+        public static string GetWebFingerName( this SiteContext context )
+        {
+            IConfiguration config = context.Config;
+            return $"{config[$"{settingsPrefix}_username"]}@{config["urlnohttp"]}";
+        }
+
         public static WebFinger FromSiteContext( SiteContext context )
         {
             IConfiguration config = context.Config;
             var webFinger = new WebFinger
             {
-                Subject = $"acct:{config[$"{settingsPrefix}_username"]}@{config["urlnohttp"]}",
+                Subject = $"acct:{GetWebFingerName( context )}",
                 Links = new WebFingerLinks
                 {
                     Href = new Uri( context.GetProfileJsonUrl() )
