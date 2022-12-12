@@ -31,13 +31,18 @@ namespace Pretzel.SethExtensions.ActivityPub
 
         public static WebFinger FromSiteContext( SiteContext context )
         {
-            var webFinger = new WebFinger
+            var webFingerLinks = new WebFingerLinks[]
             {
-                Subject = $"acct:{GetWebFingerName( context )}",
-                Links = new WebFingerLinks
+                new WebFingerLinks
                 {
                     Href = new Uri( context.GetProfileJsonUrl() )
                 }
+            };
+
+            var webFinger = new WebFinger
+            {
+                Subject = $"acct:{GetWebFingerName( context )}",
+                Links = webFingerLinks
             };
 
             return webFinger;
