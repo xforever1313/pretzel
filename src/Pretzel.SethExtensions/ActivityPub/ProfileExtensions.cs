@@ -147,11 +147,19 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             if( TryGetIconUrl( config, out string iconUrl ) )
             {
-                profile.Icon = new Link[]
+                profile.Icon = new Image[]
                 {
-                    new Link
+                    new Image
                     {
-                        Href = new Uri( iconUrl )
+                        Type = new string[]{ "Image" },
+                        Url = new Link[]
+                        {
+                            new Link
+                            {
+                                Href = new Uri( iconUrl ),
+                                MediaType = $"image/{Path.GetExtension( iconUrl ).TrimStart( '.' )}"
+                            }
+                        }
                     }
                 };
             }
