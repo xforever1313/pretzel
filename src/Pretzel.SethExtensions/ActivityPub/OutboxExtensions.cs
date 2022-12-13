@@ -44,7 +44,7 @@ namespace Pretzel.SethExtensions.ActivityPub
                 string status = $"{title}{description}{urlHtml}";
 
                 activities.Add(
-                    new Activity
+                    new Create
                     {
                         Actor = new Actor[]
                         {
@@ -106,9 +106,19 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             var outboxCollection = new OrderedCollection
             {
+                ExtensionData = new Dictionary<string, JsonElement>
+                {
+                    ["@context"] = JsonSerializer.SerializeToElement(
+                        new Uri[]
+                        {
+                            new Uri( "https://www.w3.org/ns/activitystreams")
+                        }
+                    )
+                },
+                Type = new string[] { "OrderedCollection" },
                 Summary = new string[]{ $"Outbox for {context.GetAddressName()}" },
                 TotalItems = (uint)activities.Count,
-                Items = activities,
+                OrderedItems = activities,
                 // Unsure if this needs to be the profile or the URL.
                 Id = context.GetOutboxUrl()
             };

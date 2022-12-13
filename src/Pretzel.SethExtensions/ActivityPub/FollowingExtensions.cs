@@ -3,7 +3,9 @@
 // Distributed under the Microsoft Public License (MS-PL).
 //
 
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using KristofferStrube.ActivityStreams;
 using Pretzel.Logic.Templating.Context;
 
@@ -36,7 +38,7 @@ namespace Pretzel.SethExtensions.ActivityPub
                         },
                         Object = new KristofferStrube.ActivityStreams.Object[]
                         {
-                            new KristofferStrube.ActivityStreams.Object
+                            new Actor
                             {
                                 Name = new string[]{ follow }
                             }
@@ -47,7 +49,17 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             return new OrderedCollection
             {
-                Items = following,
+                ExtensionData = new Dictionary<string, JsonElement>
+                {
+                    ["@context"] = JsonSerializer.SerializeToElement(
+                        new Uri[]
+                        {
+                            new Uri( "https://www.w3.org/ns/activitystreams")
+                        }
+                    )
+                },
+                OrderedItems = following,
+                Type = new string[]{ "OrderedCollection" },
                 TotalItems = (uint)following.Count,
                 Summary = new string[]{ $"Who {webFingerName} is following" },
 

@@ -32,7 +32,14 @@ namespace Pretzel.SethExtensions.ActivityPub
             var extensionData = new Dictionary<string, JsonElement>
             {
                 ["discoverable"] = JsonSerializer.SerializeToElement( true ),
-                ["manuallyApprovesFollowers"] = JsonSerializer.SerializeToElement( false )
+                ["manuallyApprovesFollowers"] = JsonSerializer.SerializeToElement( false ),
+                ["@context"] = JsonSerializer.SerializeToElement(
+                    new Uri[]
+                    {
+                        new Uri( "https://www.w3.org/ns/activitystreams" ),
+                        new Uri( "https://w3id.org/security/v1" )
+                    }
+                )
             };
 
             var profile = new Service
@@ -44,6 +51,8 @@ namespace Pretzel.SethExtensions.ActivityPub
                         Href = new Uri( baseUrl )
                     }
                 },
+
+                Type = new string[]{ "Service" },
 
                 // ID must be the same as the URL to this page (its a self-reference).
                 Id = context.GetProfileJsonUrl()
@@ -153,7 +162,7 @@ namespace Pretzel.SethExtensions.ActivityPub
                     config[$"{settingsPrefix}_created"]?.ToString() ?? "",
                     "o",
                     CultureInfo.InvariantCulture,
-                    DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal | DateTimeStyles.RoundtripKind
+                    DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.RoundtripKind
                 );
             }
 
