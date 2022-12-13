@@ -4,7 +4,6 @@
 //
 
 using System;
-using ActivityPub.Models;
 using Pretzel.Logic;
 using Pretzel.Logic.Templating.Context;
 

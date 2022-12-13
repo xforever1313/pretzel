@@ -1,3 +1,7 @@
 [submodule "src/ActivityPub.Models"]
 	path = src/ActivityPub.Models
 	url = https://github.com/xforever1313/ActivityPub.Models.git
+[submodule "src/ActivityStreams"]
+	path = src/ActivityStreams
+	url = https://github.com/xforever1313/ActivityStreams.git
+	branch = main

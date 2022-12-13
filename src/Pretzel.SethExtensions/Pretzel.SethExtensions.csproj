@@ -2,13 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-	<Nullable>enable</Nullable>
+  	<Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Pretzel.Logic\Pretzel.Logic.csproj" />
+    <ProjectReference Include="..\ActivityStreams\src\KristofferStrube.ActivityStreams\KristofferStrube.ActivityStreams.csproj" />
   </ItemGroup>
-
-  <Import Project="..\ActivityPub.Models\src\ActivityPub.Models\ActivityPub.Models.projitems" Label="Shared" />
 
 </Project>

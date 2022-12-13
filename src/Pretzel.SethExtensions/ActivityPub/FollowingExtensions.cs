@@ -3,19 +3,15 @@
 // Distributed under the Microsoft Public License (MS-PL).
 //
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ActivityPub.Models;
+using KristofferStrube.ActivityStreams;
 using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.SethExtensions.ActivityPub
 {
     internal static class FollowingExtensions
     {
-        public static FollowingCollection? FromSiteContext( this SiteContext context )
+        public static OrderedCollection? FromSiteContext( this SiteContext context )
         {
             IEnumerable<string>? followingList = context.Config.GetFollowing();
             if( followingList is null )
@@ -25,22 +21,35 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             string webFingerName = context.GetAddressName();
 
-            var following = new List<Following>();
+            var following = new List<Follow>();
             foreach( string follow in followingList )
             {
                 following.Add(
-                    new Following
+                    new Follow
                     {
-                        Actor  = $"{webFingerName}",
-                        Object = follow
+                        Actor = new Actor[]
+                        {
+                            new Actor
+                            {
+                                Name = new string[]{ webFingerName }
+                            }
+                        },
+                        Object = new KristofferStrube.ActivityStreams.Object[]
+                        {
+                            new KristofferStrube.ActivityStreams.Object
+                            {
+                                Name = new string[]{ follow }
+                            }
+                        }
                     }
                 );
             }
 
-            return new FollowingCollection
+            return new OrderedCollection
             {
-                Following = following.ToArray(),
-                Summary = $"Who {webFingerName} is following",
+                Items = following,
+                TotalItems = (uint)following.Count,
+                Summary = new string[]{ $"Who {webFingerName} is following" },
 
                 // Unsure if ID is supposed to be the URL
                 // or the ID of the actor.  We'll try URL

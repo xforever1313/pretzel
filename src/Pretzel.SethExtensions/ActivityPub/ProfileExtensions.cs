@@ -5,9 +5,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
-using ActivityPub.Models;
+using System.Text.Json;
+using KristofferStrube.ActivityStreams;
 using Pretzel.Logic;
 using Pretzel.Logic.Templating.Context;
 
@@ -21,18 +23,27 @@ namespace Pretzel.SethExtensions.ActivityPub
 
         // ---------------- Functions ----------------
 
-        public static Profile FromSiteContext( SiteContext context )
+        public static Service FromSiteContext( SiteContext context )
         {
             IConfiguration config = context.Config;
 
             string baseUrl = GetBaseUrl( config );
 
-            var profile = new Profile
+            var extensionData = new Dictionary<string, JsonElement>
             {
-                Discoverable = true,
-                ManuallyApprovesFollowers = false,
-                Type = "Service",
-                Url = new Uri( baseUrl ),
+                ["discoverable"] = JsonSerializer.SerializeToElement( true ),
+                ["manuallyApprovesFollowers"] = JsonSerializer.SerializeToElement( false )
+            };
+
+            var profile = new Service
+            {
+                Url = new Link[]
+                { 
+                    new Link
+                    {
+                        Href = new Uri( baseUrl )
+                    }
+                },
 
                 // ID must be the same as the URL to this page (its a self-reference).
                 Id = context.GetProfileJsonUrl()
@@ -40,66 +51,69 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             if( TryGetProfileUrl( config, out string profileUrl ) )
             {
-                profile = profile with
-                {
-                    Url = new Uri(
-                        context.UrlCombine( profileUrl )
-                    )
+                profile.Url = new Link[]
+                { 
+                    new Link
+                    {
+                        Href = new Uri( context.UrlCombine( profileUrl ) )
+                    }
                 };
             }
 
             if( config.GenerateInbox() )
             {
-                profile = profile with
+                profile.Inbox = new Link
                 {
-                    Inbox = new Uri( context.GetInboxUrl() )
+                    Href = new Uri( context.GetInboxUrl() )
                 };
             }
 
             if( config.GenerateOutbox() )
             {
-                profile = profile with
+                profile.Outbox = new Link
                 {
-                    Outbox = new Uri( context.GetOutboxUrl() )
+                    Href = new Uri( context.GetOutboxUrl() )
                 };
             }
 
             if( config.GetFollowing() is not null )
             {
-                profile = profile with
+                profile.Following = new Link
                 {
-                    Following = new Uri( context.GetFollowingUrl() )
+                    Href = new Uri( context.GetFollowingUrl() )
                 };
             }
 
             if( config.ContainsKey( $"{settingsPrefix}_username" ) )
             {
-                profile = profile with
-                {
-                    PreferredUserName = config[$"{settingsPrefix}_username"].ToString()
-                };
+                profile.PreferredUsername = config[$"{settingsPrefix}_username"].ToString();
             }
 
             {
-                var attachments = new List<Attachment>();
+                var attachments = new List<KristofferStrube.ActivityStreams.Object>();
                 attachments.Add(
-                    new Attachment
+                    new KristofferStrube.ActivityStreams.Object
                     {
-                        Name = "Website",
-                        Type = "PropertyValue",
-                        Value = GetAttachmentUrl( config["url"].ToString() )
-
+                        Name = new string[] { "Website" },
+                        Type = new string[] { "PropertyValue" },
+                        ExtensionData = new Dictionary<string, JsonElement>
+                        {
+                            ["value"] = JsonSerializer.SerializeToElement( GetAttachmentUrl( config["url"].ToString() ) )
+                        }
                     }
                 );
 
                 if( config.ContainsKey( "github" ) )
                 {
                     attachments.Add(
-                        new Attachment
+                        new KristofferStrube.ActivityStreams.Object
                         {
-                            Name = "GitHub",
-                            Type = "PropertyValue",
-                            Value = GetAttachmentUrl( config["github"].ToString() )
+                            Name = new string[] { "GitHub" },
+                            Type = new string[] { "PropertyValue" },
+                            ExtensionData = new Dictionary<string, JsonElement>
+                            {
+                                ["value"] = JsonSerializer.SerializeToElement( GetAttachmentUrl( config["github"].ToString() ) )
+                            }
                         }
                     );
                 }
@@ -107,47 +121,55 @@ namespace Pretzel.SethExtensions.ActivityPub
                 if( config.ContainsKey( "contact" ) )
                 {
                     attachments.Add(
-                        new Attachment
+                        new KristofferStrube.ActivityStreams.Object
                         {
-                            Name = "Email",
-                            Type = "PropertyValue",
-                            Value = config["contact"].ToString()
+                            Name = new string[]{ "Email" },
+                            Type = new string[] { "PropertyValue" },
+                            ExtensionData = new Dictionary<string, JsonElement>
+                            {
+                                ["value"] = JsonSerializer.SerializeToElement(config["contact"].ToString())
+                            }
                         }
                     );
                 }
 
-                profile = profile with { Attachments = attachments.ToArray() };
+                profile.Attachment = attachments;
             }
 
             if( TryGetIconUrl( config, out string iconUrl ) )
             {
-                profile = profile with
+                profile.Icon = new Link[]
                 {
-                    Icon = new Uri( iconUrl )
+                    new Link
+                    {
+                        Href = new Uri( iconUrl )
+                    }
                 };
             }
 
             if( config.ContainsKey( $"{settingsPrefix}_created" ) )
             {
-                profile = profile with
-                {
-                    Published = config[$"{settingsPrefix}_created"].ToString()
-                };
+                profile.Published = DateTime.ParseExact(
+                    config[$"{settingsPrefix}_created"]?.ToString() ?? "",
+                    "o",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal | DateTimeStyles.RoundtripKind
+                );
             }
 
             if( config.ContainsKey( $"{settingsPrefix}_summary" ) )
             {
-                profile = profile with
+                profile.Summary = new string[]
                 {
-                    Summary = config[$"{settingsPrefix}_summary"].ToString()
+                    config[$"{settingsPrefix}_summary"]?.ToString() ?? ""
                 };
             }
 
             if( config.ContainsKey( $"title" ) )
             {
-                profile = profile with
+                profile.Name = new string[]
                 {
-                    Name = config[$"title"].ToString()
+                    config[$"title"]?.ToString() ?? ""
                 };
             }
 
@@ -166,17 +188,18 @@ namespace Pretzel.SethExtensions.ActivityPub
                 }
                 publicKeyBuilder.Remove( publicKeyBuilder.Length - 2, 2 );
 
-                profile = profile with
+                var key = new ProfilePublicKey
                 {
-                    PublicKey = new ProfilePublicKey
-                    {
-                        // ID Must match the Profile's ID.
-                        Id = $"{profile.Id}#main-key",
-                        Owner = profile.Id.ToString(),
-                        PublicKeyPem = publicKeyBuilder.ToString()
-                    }
+                    // ID Must match the Profile's ID.
+                    Id = $"{profile.Id}#main-key",
+                    Owner = profile.Id.ToString(),
+                    PublicKeyPem = publicKeyBuilder.ToString()
                 };
+
+                extensionData["publicKey"] = JsonSerializer.SerializeToElement( key );
             }
+
+            profile.ExtensionData = extensionData;
 
             return profile;
         }

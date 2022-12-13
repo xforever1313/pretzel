@@ -6,19 +6,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ActivityPub.Models;
+using System.Text.Json;
+using KristofferStrube.ActivityStreams;
 using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.SethExtensions.ActivityPub
 {
     internal static class OutboxExtensions
     {
-        public static OutboxCollection? FromSiteContext( this SiteContext context )
+        public static OrderedCollection? FromSiteContext( this SiteContext context )
         {
             const int maximumCharacters = 490;
 
             var activities = new List<Activity>();
-            foreach( Page post in context.Posts.OrderByDescending( p => p.Date ) )
+            foreach( Pretzel.Logic.Templating.Context.Page post in context.Posts.OrderByDescending( p => p.Date ) )
             {
                 string url = context.UrlCombine(
                     new LinkHelper().EvaluateLink( context, post )
@@ -43,38 +44,71 @@ namespace Pretzel.SethExtensions.ActivityPub
                 string status = $"{title}{description}{urlHtml}";
 
                 activities.Add(
-                    new CreateActivity
+                    new Activity
                     {
-                        Actor = context.GetAddressName(),
-                        Id = url,
-                        Summary = $"Created new post: {post.Title}",
-                        Object = new NoteLink
+                        Actor = new Actor[]
                         {
-                            Content = status,
-                            // Mastodon looks at the name if it somehow can't
-                            // find the content.  But we have content, so we should be okay?
-                            Id = url,
-                            Url = new Uri( url ),
-                            // Used to determine the profile which authored the status.
-                            AttributedTo = context.GetAddressName(),
-                            Sensitive = false,
-                            Published = post.Date,
-                            // Per mastodon's docs, this should be "as:Public"
-                            // to show public status.
-                            // Per this URL, it appears as though it needs to be this.
-                            // https://blog.joinmastodon.org/2018/06/how-to-implement-a-basic-activitypub-server/
-                            To = new string[] { "https://www.w3.org/ns/activitystreams#Public" }
+                            new Actor
+                            {
+                                Name = new string[]{ context.GetAddressName() }
+                            }
+                        },
+                        Id = url,
+                        Summary = new string[]{ $"Created new post: {post.Title}" },
+                        Object = new Note[]
+                        {
+                            new Note
+                            
+                            {
+                                Content = new string[]{ status },
+                                // Mastodon looks at the name if it somehow can't
+                                // find the content.  But we have content, so we should be okay?
+                                Id = url,
+                                Url = new Link[]
+                                {
+                                    new Link
+                                    {
+                                        Href = new Uri( url )
+                                    }
+                                },
+                                // Used to determine the profile which authored the status.
+                                AttributedTo = new Actor[]
+                                {
+                                    new Actor
+                                    {
+                                        Name = new string[]{ context.GetAddressName() }
+                                    }
+                                },
+                                Published = post.Date,
+                                // Per mastodon's docs, this should be "as:Public"
+                                // to show public status.
+                                // Per this URL, it appears as though it needs to be this.
+                                // https://blog.joinmastodon.org/2018/06/how-to-implement-a-basic-activitypub-server/
+                                To = new Link[]
+                                {
+                                    new Link
+                                    {
+                                        Href = new Uri( "https://www.w3.org/ns/activitystreams#Public" )
+                                    }
+                                },
 
-                            // No summary, it is the CW text.
+                                // No summary, it is the CW text.
+
+                                ExtensionData = new Dictionary<string, JsonElement>
+                                {
+                                    ["sensitive"] = JsonSerializer.SerializeToElement( false )
+                                }
+                            }
                         }
                     }
                 );
             }
 
-            var outboxCollection = new OutboxCollection
+            var outboxCollection = new OrderedCollection
             {
-                Summary = $"Outbox for {context.GetAddressName()}",
-                Activities = activities.ToArray(),
+                Summary = new string[]{ $"Outbox for {context.GetAddressName()}" },
+                TotalItems = (uint)activities.Count,
+                Items = activities,
                 // Unsure if this needs to be the profile or the URL.
                 Id = context.GetOutboxUrl()
             };
