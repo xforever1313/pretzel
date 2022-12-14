@@ -136,7 +136,9 @@ namespace Pretzel.SethExtensions.ActivityPub
                             Type = new string[] { "PropertyValue" },
                             ExtensionData = new Dictionary<string, JsonElement>
                             {
-                                ["value"] = JsonSerializer.SerializeToElement(config["contact"].ToString())
+                                ["value"] = JsonSerializer.SerializeToElement(
+                                    @$"<a href=""mailto:{config["contact"]}"">{config["contact"]}</a>"
+                                )
                             }
                         }
                     );
