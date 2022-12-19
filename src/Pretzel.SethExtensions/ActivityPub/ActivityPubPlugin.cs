@@ -110,7 +110,7 @@ namespace Pretzel.SethExtensions.ActivityPub
                 webFinger,
                 new JsonSerializerOptions
                 {
-                    WriteIndented = true
+                    WriteIndented = false
                 }
             );
 
