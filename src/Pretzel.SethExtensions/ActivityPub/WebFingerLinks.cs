@@ -11,10 +11,10 @@ namespace Pretzel.SethExtensions.ActivityPub
     public record class WebFingerLinks
     {
         [JsonPropertyName( "rel" )]
-        public string Rel => "self";
+        public string? Rel { get; set; }
 
         [JsonPropertyName( "type" )]
-        public string Type => "application/activity+json";
+        public string? Type { get; set; }
 
         [JsonPropertyName( "href" )]
         [JsonIgnore( Condition = JsonIgnoreCondition.WhenWritingNull )]

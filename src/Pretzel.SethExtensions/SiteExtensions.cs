@@ -16,15 +16,22 @@ namespace Pretzel.SethExtensions
         /// </summary>
         public static string UrlCombine( this SiteContext context, string urlLocation )
         {
+            string? url = context.GetSiteUrl();
+
+            url = url.TrimEnd( '/' );
+            urlLocation = urlLocation.TrimStart( '/' );
+            return $"{url}/{urlLocation}";
+        }
+
+        public static string GetSiteUrl( this SiteContext context )
+        {
             string? url = context.Config["url"].ToString();
             if( url is null )
             {
                 throw new ArgumentNullException( nameof( url ), "'url' must be specified in site config." );
             }
 
-            url = url.TrimEnd( '/' );
-            urlLocation = urlLocation.TrimStart( '/' );
-            return $"{url}/{urlLocation}";
+            return url;
         }
     }
 }

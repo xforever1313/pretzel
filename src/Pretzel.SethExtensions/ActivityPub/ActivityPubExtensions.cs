@@ -92,5 +92,24 @@ namespace Pretzel.SethExtensions.ActivityPub
         {
             return context.UrlCombine( $"{context.Config[$"{settingsPrefix}_directory"]}/following.json" );
         }
+
+        public static bool TryGetIconUrl( this IConfiguration config, out string iconUrl )
+        {
+            if( config.ContainsKey( $"{settingsPrefix}_icon" ) == false )
+            {
+                iconUrl = "";
+                return false;
+            }
+
+            string? value = config[$"{settingsPrefix}_icon"].ToString();
+            if( value is null )
+            {
+                iconUrl = "";
+                return false;
+            }
+
+            iconUrl = value;
+            return true;
+        }
     }
 }

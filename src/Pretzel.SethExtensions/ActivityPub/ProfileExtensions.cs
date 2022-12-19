@@ -147,7 +147,7 @@ namespace Pretzel.SethExtensions.ActivityPub
                 profile.Attachment = attachments;
             }
 
-            if( TryGetIconUrl( config, out string iconUrl ) )
+            if( config.TryGetIconUrl( out string iconUrl ) )
             {
                 profile.Icon = new Image[]
                 {
@@ -257,25 +257,6 @@ namespace Pretzel.SethExtensions.ActivityPub
             }
 
             profileUrl = value;
-            return true;
-        }
-
-        private static bool TryGetIconUrl( IConfiguration config, out string iconUrl )
-        {
-            if( config.ContainsKey( $"{settingsPrefix}_icon" ) == false )
-            {
-                iconUrl = "";
-                return false;
-            }
-
-            string? value = config[$"{settingsPrefix}_icon"].ToString();
-            if( value is null )
-            {
-                iconUrl = "";
-                return false;
-            }
-
-            iconUrl = value;
             return true;
         }
 
