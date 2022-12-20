@@ -8,12 +8,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using KristofferStrube.ActivityStreams;
+using KristofferStrube.ActivityStreams.JsonLD;
 using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.SethExtensions.ActivityPub
 {
     internal static class OutboxExtensions
     {
+        // ---------------- Fields ----------------
+
+        private static readonly Uri publicStream = new Uri(
+            "https://www.w3.org/ns/activitystreams#Public"
+        );
+
+        // ---------------- Functions ----------------
+
         public static OrderedCollection? FromSiteContext( this SiteContext context )
         {
             const int maximumCharacters = 490;
@@ -46,24 +55,32 @@ namespace Pretzel.SethExtensions.ActivityPub
                 activities.Add(
                     new Create
                     {
-                        Actor = new Actor[]
+                        // ID must be URL to the post itself.
+                        Id = url,
+                        Type = new string[] { "Create" },
+                        Actor = new Link[]
                         {
-                            new Actor
+                            // Actor must be the profile link.
+                            new Link
                             {
-                                Name = new string[]{ context.GetAddressName() }
+                                Href = new Uri( context.GetProfileJsonUrl() )
                             }
                         },
-                        Id = url,
-                        Summary = new string[]{ $"Created new post: {post.Title}" },
+                        Published = post.Date,
+                        To = new Link[]
+                        {
+                            new Link
+                            {
+                                Href = publicStream
+                            }
+                        },
                         Object = new Note[]
                         {
                             new Note
-                            
                             {
-                                Content = new string[]{ status },
-                                // Mastodon looks at the name if it somehow can't
-                                // find the content.  But we have content, so we should be okay?
                                 Id = url,
+                                Type = new string[]{ "Note" },
+                                Published = post.Date,
                                 Url = new Link[]
                                 {
                                     new Link
@@ -72,14 +89,14 @@ namespace Pretzel.SethExtensions.ActivityPub
                                     }
                                 },
                                 // Used to determine the profile which authored the status.
-                                AttributedTo = new Actor[]
+                                // Needs to be profile URL.
+                                AttributedTo = new Link[]
                                 {
-                                    new Actor
+                                    new Link
                                     {
-                                        Name = new string[]{ context.GetAddressName() }
+                                        Href = new Uri( context.GetProfileJsonUrl() )
                                     }
                                 },
-                                Published = post.Date,
                                 // Per mastodon's docs, this should be "as:Public"
                                 // to show public status.
                                 // Per this URL, it appears as though it needs to be this.
@@ -88,9 +105,12 @@ namespace Pretzel.SethExtensions.ActivityPub
                                 {
                                     new Link
                                     {
-                                        Href = new Uri( "https://www.w3.org/ns/activitystreams#Public" )
+                                        Href = publicStream
                                     }
                                 },
+                                // Mastodon looks at the name if it somehow can't
+                                // find the content.  But we have content, so we should be okay?
+                                Content = new string[]{ status },
 
                                 // No summary, it is the CW text.
 
@@ -106,20 +126,14 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             var outboxCollection = new OrderedCollection
             {
-                ExtensionData = new Dictionary<string, JsonElement>
+                JsonLDContext = new ITermDefinition[]
                 {
-                    ["@context"] = JsonSerializer.SerializeToElement(
-                        new Uri[]
-                        {
-                            new Uri( "https://www.w3.org/ns/activitystreams")
-                        }
-                    )
+                    new ReferenceTermDefinition( new Uri( "https://www.w3.org/ns/activitystreams") )
                 },
                 Type = new string[] { "OrderedCollection" },
-                Summary = new string[]{ $"Outbox for {context.GetAddressName()}" },
                 TotalItems = (uint)activities.Count,
                 OrderedItems = activities,
-                // Unsure if this needs to be the profile or the URL.
+                // ID must be a self-reference.
                 Id = context.GetOutboxUrl()
             };
 
