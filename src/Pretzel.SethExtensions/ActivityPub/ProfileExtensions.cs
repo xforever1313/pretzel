@@ -10,6 +10,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using KristofferStrube.ActivityStreams;
+using KristofferStrube.ActivityStreams.JsonLD;
 using Pretzel.Logic;
 using Pretzel.Logic.Templating.Context;
 
@@ -32,40 +33,33 @@ namespace Pretzel.SethExtensions.ActivityPub
             var extensionData = new Dictionary<string, JsonElement>
             {
                 ["discoverable"] = JsonSerializer.SerializeToElement( true ),
-                ["manuallyApprovesFollowers"] = JsonSerializer.SerializeToElement( false ),
-                ["@context"] = JsonSerializer.SerializeToElement(
-                    new Uri[]
-                    {
-                        new Uri( "https://www.w3.org/ns/activitystreams" ),
-                        new Uri( "https://w3id.org/security/v1" )
-                    }
-                )
+                ["manuallyApprovesFollowers"] = JsonSerializer.SerializeToElement( false )
             };
 
             var profile = new Service
             {
+                JsonLDContext = new ITermDefinition[]
+                {
+                    new ReferenceTermDefinition( new Uri( "https://www.w3.org/ns/activitystreams") ),
+                    new ReferenceTermDefinition( new Uri( "https://w3id.org/security/v1" ) )
+                },
+                // ID must be the same as the URL to this page (its a self-reference).
+                Id = context.GetProfileJsonUrl(),
+                Type = new string[]{ "Service" },
                 Url = new Link[]
                 { 
                     new Link
                     {
                         Href = new Uri( baseUrl )
                     }
-                },
-
-                Type = new string[]{ "Service" },
-
-                // ID must be the same as the URL to this page (its a self-reference).
-                Id = context.GetProfileJsonUrl()
+                }
             };
 
-            if( TryGetProfileUrl( config, out string profileUrl ) )
+            if( config.GetFollowing() is not null )
             {
-                profile.Url = new Link[]
-                { 
-                    new Link
-                    {
-                        Href = new Uri( context.UrlCombine( profileUrl ) )
-                    }
+                profile.Following = new Link
+                {
+                    Href = new Uri( context.GetFollowingUrl() )
                 };
             }
 
@@ -85,21 +79,76 @@ namespace Pretzel.SethExtensions.ActivityPub
                 };
             }
 
-            if( config.GetFollowing() is not null )
-            {
-                profile.Following = new Link
-                {
-                    Href = new Uri( context.GetFollowingUrl() )
-                };
-            }
-
             if( config.ContainsKey( $"{settingsPrefix}_username" ) )
             {
                 profile.PreferredUsername = config[$"{settingsPrefix}_username"].ToString();
             }
 
+            if( config.ContainsKey( $"title" ) )
             {
-                var attachments = new List<KristofferStrube.ActivityStreams.Object>();
+                profile.Name = new string[]
+                {
+                    config[$"title"]?.ToString() ?? ""
+                };
+            }
+
+            if( config.ContainsKey( $"{settingsPrefix}_summary" ) )
+            {
+                profile.Summary = new string[]
+                {
+                    config[$"{settingsPrefix}_summary"]?.ToString() ?? ""
+                };
+            }
+
+            if( TryGetProfileUrl( config, out string profileUrl ) )
+            {
+                profile.Url = new Link[]
+                { 
+                    new Link
+                    {
+                        Href = new Uri( context.UrlCombine( profileUrl ) )
+                    }
+                };
+            }
+
+            if( config.ContainsKey( $"{settingsPrefix}_created" ) )
+            {
+                profile.Published = DateTime.ParseExact(
+                    config[$"{settingsPrefix}_created"]?.ToString() ?? "",
+                    "o",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.RoundtripKind
+                );
+            }
+
+            if( TryGetPublicKeyFileLocation( config, out string fileLocation ) )
+            {
+                string file = Path.Combine(
+                    context.SourceFolder,
+                    fileLocation
+                );
+
+                var publicKeyBuilder = new StringBuilder();
+                foreach( string line in File.ReadAllLines( file ) )
+                {
+                    publicKeyBuilder.Append( line );
+                    publicKeyBuilder.Append( "\\n" );
+                }
+                publicKeyBuilder.Remove( publicKeyBuilder.Length - 2, 2 );
+
+                var key = new ProfilePublicKey
+                {
+                    // ID Must match the Profile's ID.
+                    Id = $"{profile.Id}#main-key",
+                    Owner = profile.Id.ToString(),
+                    PublicKeyPem = publicKeyBuilder.ToString()
+                };
+
+                extensionData["publicKey"] = JsonSerializer.SerializeToElement( key );
+            }
+
+            {
+                var attachments = new List<IObjectOrLink>();
                 attachments.Add(
                     new KristofferStrube.ActivityStreams.Object
                     {
@@ -154,68 +203,15 @@ namespace Pretzel.SethExtensions.ActivityPub
                     new Image
                     {
                         Type = new string[]{ "Image" },
+                        MediaType = $"image/{Path.GetExtension( iconUrl ).TrimStart( '.' )}",
                         Url = new Link[]
                         {
                             new Link
                             {
-                                Href = new Uri( iconUrl ),
-                                MediaType = $"image/{Path.GetExtension( iconUrl ).TrimStart( '.' )}"
-                            }
+                                Href = new Uri( iconUrl )                            }
                         }
                     }
                 };
-            }
-
-            if( config.ContainsKey( $"{settingsPrefix}_created" ) )
-            {
-                profile.Published = DateTime.ParseExact(
-                    config[$"{settingsPrefix}_created"]?.ToString() ?? "",
-                    "o",
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.RoundtripKind
-                );
-            }
-
-            if( config.ContainsKey( $"{settingsPrefix}_summary" ) )
-            {
-                profile.Summary = new string[]
-                {
-                    config[$"{settingsPrefix}_summary"]?.ToString() ?? ""
-                };
-            }
-
-            if( config.ContainsKey( $"title" ) )
-            {
-                profile.Name = new string[]
-                {
-                    config[$"title"]?.ToString() ?? ""
-                };
-            }
-
-            if( TryGetPublicKeyFileLocation( config, out string fileLocation ) )
-            {
-                string file = Path.Combine(
-                    context.SourceFolder,
-                    fileLocation
-                );
-
-                var publicKeyBuilder = new StringBuilder();
-                foreach( string line in File.ReadAllLines( file ) )
-                {
-                    publicKeyBuilder.Append( line );
-                    publicKeyBuilder.Append( "\\n" );
-                }
-                publicKeyBuilder.Remove( publicKeyBuilder.Length - 2, 2 );
-
-                var key = new ProfilePublicKey
-                {
-                    // ID Must match the Profile's ID.
-                    Id = $"{profile.Id}#main-key",
-                    Owner = profile.Id.ToString(),
-                    PublicKeyPem = publicKeyBuilder.ToString()
-                };
-
-                extensionData["publicKey"] = JsonSerializer.SerializeToElement( key );
             }
 
             profile.ExtensionData = extensionData;
