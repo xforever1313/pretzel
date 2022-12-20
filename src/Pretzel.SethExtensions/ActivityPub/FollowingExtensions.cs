@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using KristofferStrube.ActivityStreams;
+using KristofferStrube.ActivityStreams.JsonLD;
 using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.SethExtensions.ActivityPub
@@ -23,49 +24,27 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             string webFingerName = context.GetAddressName();
 
-            var following = new List<Follow>();
+            var following = new List<IObjectOrLink>();
             foreach( string follow in followingList )
             {
                 following.Add(
-                    new Follow
-                    {
-                        Actor = new Actor[]
-                        {
-                            new Actor
-                            {
-                                Name = new string[]{ webFingerName }
-                            }
-                        },
-                        Object = new KristofferStrube.ActivityStreams.Object[]
-                        {
-                            new Actor
-                            {
-                                Name = new string[]{ follow }
-                            }
-                        }
+                    new Link{
+                        Href = new Uri( follow )
                     }
                 );
             }
 
             return new OrderedCollection
             {
-                ExtensionData = new Dictionary<string, JsonElement>
+                JsonLDContext = new ITermDefinition[]
                 {
-                    ["@context"] = JsonSerializer.SerializeToElement(
-                        new Uri[]
-                        {
-                            new Uri( "https://www.w3.org/ns/activitystreams")
-                        }
-                    )
+                    new ReferenceTermDefinition( new Uri( "https://www.w3.org/ns/activitystreams") )
                 },
                 OrderedItems = following,
                 Type = new string[]{ "OrderedCollection" },
                 TotalItems = (uint)following.Count,
-                Summary = new string[]{ $"Who {webFingerName} is following" },
 
-                // Unsure if ID is supposed to be the URL
-                // or the ID of the actor.  We'll try URL
-                // first.
+                // ID should be a self-reference.
                 Id = context.GetFollowingUrl()
             };
         }
