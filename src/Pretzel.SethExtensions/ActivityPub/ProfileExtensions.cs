@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using KristofferStrube.ActivityStreams;
 using KristofferStrube.ActivityStreams.JsonLD;
 using Pretzel.Logic;
@@ -150,28 +151,22 @@ namespace Pretzel.SethExtensions.ActivityPub
             {
                 var attachments = new List<IObjectOrLink>();
                 attachments.Add(
-                    new KristofferStrube.ActivityStreams.Object
+                    new PropertyValue
                     {
                         Name = new string[] { "Website" },
                         Type = new string[] { "PropertyValue" },
-                        ExtensionData = new Dictionary<string, JsonElement>
-                        {
-                            ["value"] = JsonSerializer.SerializeToElement( GetAttachmentUrl( config["url"].ToString() ) )
-                        }
+                        Value = GetAttachmentUrl( config["url"].ToString() )
                     }
                 );
 
                 if( config.ContainsKey( "github" ) )
                 {
                     attachments.Add(
-                        new KristofferStrube.ActivityStreams.Object
+                        new PropertyValue
                         {
                             Name = new string[] { "GitHub" },
                             Type = new string[] { "PropertyValue" },
-                            ExtensionData = new Dictionary<string, JsonElement>
-                            {
-                                ["value"] = JsonSerializer.SerializeToElement( GetAttachmentUrl( config["github"].ToString() ) )
-                            }
+                            Value = GetAttachmentUrl( config["github"].ToString() )
                         }
                     );
                 }
@@ -179,16 +174,11 @@ namespace Pretzel.SethExtensions.ActivityPub
                 if( config.ContainsKey( "contact" ) )
                 {
                     attachments.Add(
-                        new KristofferStrube.ActivityStreams.Object
+                        new PropertyValue
                         {
                             Name = new string[]{ "Email" },
                             Type = new string[] { "PropertyValue" },
-                            ExtensionData = new Dictionary<string, JsonElement>
-                            {
-                                ["value"] = JsonSerializer.SerializeToElement(
-                                    @$"<a href=""mailto:{config["contact"]}"">{config["contact"]}</a>"
-                                )
-                            }
+                            Value = @$"<a href=""mailto:{config["contact"]}"">{config["contact"]}</a>"
                         }
                     );
                 }
@@ -273,6 +263,13 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             fileLocation = value;
             return true;
+        }
+
+        private class PropertyValue : KristofferStrube.ActivityStreams.Object
+        {
+            [JsonPropertyName("value")]
+            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+            public string? Value { get; set; }
         }
     }
 }
