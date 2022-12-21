@@ -34,16 +34,23 @@ namespace Pretzel.SethExtensions.ActivityPub
             var extensionData = new Dictionary<string, JsonElement>
             {
                 ["discoverable"] = JsonSerializer.SerializeToElement( true ),
-                ["manuallyApprovesFollowers"] = JsonSerializer.SerializeToElement( false )
+                ["manuallyApprovesFollowers"] = JsonSerializer.SerializeToElement( false ),
+                ["@context"] = JsonSerializer.SerializeToElement(
+                    new object[]
+                    {
+                        "https://www.w3.org/ns/activitystreams",
+                        "https://w3id.org/security/v1",
+                        new PropertyValueSchema()
+                        {
+                            PropertyValue = "schema:PropertyValue",
+                            Value = "schema:value"
+                        }
+                    }
+                )
             };
 
             var profile = new Service
             {
-                JsonLDContext = new ITermDefinition[]
-                {
-                    new ReferenceTermDefinition( new Uri( "https://www.w3.org/ns/activitystreams") ),
-                    new ReferenceTermDefinition( new Uri( "https://w3id.org/security/v1" ) )
-                },
                 // ID must be the same as the URL to this page (its a self-reference).
                 Id = context.GetProfileJsonUrl(),
                 Type = new string[]{ "Service" },
@@ -268,6 +275,17 @@ namespace Pretzel.SethExtensions.ActivityPub
         private class PropertyValue : KristofferStrube.ActivityStreams.Object
         {
             [JsonPropertyName("value")]
+            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+            public string? Value { get; set; }
+        }
+
+        private class PropertyValueSchema : ITermDefinition
+        {
+            [JsonPropertyName( "PropertyValue" )]
+            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+            public string? PropertyValue { get; set; }
+
+            [JsonPropertyName( "value" )]
             [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
             public string? Value { get; set; }
         }
