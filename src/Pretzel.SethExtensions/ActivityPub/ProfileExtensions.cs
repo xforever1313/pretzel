@@ -71,11 +71,12 @@ namespace Pretzel.SethExtensions.ActivityPub
                 };
             }
 
-            if( config.GenerateInbox() )
+            string? inbox = context.TryGetInboxUrl();
+            if( string.IsNullOrWhiteSpace( inbox ) == false )
             {
                 profile.Inbox = new Link
                 {
-                    Href = new Uri( context.GetInboxUrl() )
+                    Href = new Uri( inbox )
                 };
             }
 

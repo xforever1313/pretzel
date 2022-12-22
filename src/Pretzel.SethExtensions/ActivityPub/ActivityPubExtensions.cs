@@ -18,21 +18,6 @@ namespace Pretzel.SethExtensions.ActivityPub
 
         // ---------------- Functions ----------------
 
-        public static bool GenerateInbox( this IConfiguration config )
-        {
-            string key = $"{settingsPrefix}_inbox";
-
-            if( config.ContainsKey( key ) == false )
-            {
-                return false;
-            }
-            else if( bool.TryParse( config[key].ToString(), out bool generate ) )
-            {
-                return generate;
-            }
-            throw new ArgumentException( $"'{key}' MUST be set to true or false." );
-        }
-
         public static bool GenerateOutbox( this IConfiguration config )
         {
             string key = $"{settingsPrefix}_outbox";
@@ -83,9 +68,9 @@ namespace Pretzel.SethExtensions.ActivityPub
             return context.UrlCombine( $"{context.Config[$"{settingsPrefix}_directory"]}/outbox.json" );
         }
 
-        public static string GetInboxUrl( this SiteContext context )
+        public static string? TryGetInboxUrl( this SiteContext context )
         {
-            return context.UrlCombine( $"{context.Config[$"{settingsPrefix}_directory"]}/inbox.json" );
+            return context.Config[$"{settingsPrefix}_inbox_url"]?.ToString();
         }
 
         public static string GetFollowingUrl( this SiteContext context )
