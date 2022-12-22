@@ -11,7 +11,7 @@ using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.SethExtensions.ActivityPub
 {
-    internal static class WebFingerExtensions
+    public static class WebFingerExtensions
     {
         // ---------------- Fields ----------------
 
