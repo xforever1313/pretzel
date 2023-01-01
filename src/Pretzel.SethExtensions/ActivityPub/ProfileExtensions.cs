@@ -9,15 +9,13 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using KristofferStrube.ActivityStreams;
-using KristofferStrube.ActivityStreams.JsonLD;
 using Pretzel.Logic;
 using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.SethExtensions.ActivityPub
 {
-    internal static class ProfileExtensions
+    public static class ProfileExtensions
     {
         // ---------------- Fields ----------------
 
@@ -31,23 +29,8 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             string baseUrl = GetBaseUrl( config );
 
-            var extensionData = new Dictionary<string, JsonElement>
-            {
-                ["discoverable"] = JsonSerializer.SerializeToElement( true ),
-                ["manuallyApprovesFollowers"] = JsonSerializer.SerializeToElement( false ),
-                ["@context"] = JsonSerializer.SerializeToElement(
-                    new object[]
-                    {
-                        "https://www.w3.org/ns/activitystreams",
-                        "https://w3id.org/security/v1",
-                        new PropertyValueSchema()
-                        {
-                            PropertyValue = "schema:PropertyValue",
-                            Value = "schema:value"
-                        }
-                    }
-                )
-            };
+            var extensionData = new Dictionary<string, JsonElement>();
+            extensionData.AddMastodonExtensions();
 
             var profile = new Service
             {
@@ -122,11 +105,8 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             if( config.ContainsKey( $"{settingsPrefix}_created" ) )
             {
-                profile.Published = DateTime.ParseExact(
-                    config[$"{settingsPrefix}_created"]?.ToString() ?? "",
-                    "o",
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.RoundtripKind
+                profile.Published = ParseCreatedDate( 
+                    config[$"{settingsPrefix}_created"]?.ToString()
                 );
             }
 
@@ -137,20 +117,14 @@ namespace Pretzel.SethExtensions.ActivityPub
                     fileLocation
                 );
 
-                var publicKeyBuilder = new StringBuilder();
-                foreach( string line in File.ReadAllLines( file ) )
-                {
-                    publicKeyBuilder.Append( line );
-                    publicKeyBuilder.Append( "\\n" );
-                }
-                publicKeyBuilder.Remove( publicKeyBuilder.Length - 2, 2 );
+                string publicKeyContents = ReadPublicKey( file );
 
                 var key = new ProfilePublicKey
                 {
                     // ID Must match the Profile's ID.
                     Id = $"{profile.Id}#main-key",
                     Owner = profile.Id.ToString(),
-                    PublicKeyPem = publicKeyBuilder.ToString()
+                    PublicKeyPem = publicKeyContents
                 };
 
                 extensionData["publicKey"] = JsonSerializer.SerializeToElement( key );
@@ -158,25 +132,11 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             {
                 var attachments = new List<IObjectOrLink>();
-                attachments.Add(
-                    new PropertyValue
-                    {
-                        Name = new string[] { "Website" },
-                        Type = new string[] { "PropertyValue" },
-                        Value = GetAttachmentUrl( config["url"].ToString() )
-                    }
-                );
+                attachments.Add( ServiceExtensions.CreateWebsiteAttachment( config["url"].ToString() ) );
 
                 if( config.ContainsKey( "github" ) )
                 {
-                    attachments.Add(
-                        new PropertyValue
-                        {
-                            Name = new string[] { "GitHub" },
-                            Type = new string[] { "PropertyValue" },
-                            Value = GetAttachmentUrl( config["github"].ToString() )
-                        }
-                    );
+                    attachments.Add( ServiceExtensions.CreateGithubAttachment( config["github"].ToString() ) );
                 }
 
                 if( config.ContainsKey( "contact" ) )
@@ -196,20 +156,7 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             if( config.TryGetIconUrl( out string iconUrl ) )
             {
-                profile.Icon = new Image[]
-                {
-                    new Image
-                    {
-                        Type = new string[]{ "Image" },
-                        MediaType = $"image/{Path.GetExtension( iconUrl ).TrimStart( '.' )}",
-                        Url = new Link[]
-                        {
-                            new Link
-                            {
-                                Href = new Uri( iconUrl )                            }
-                        }
-                    }
-                };
+                profile.AddIcon( iconUrl );
             }
 
             profile.ExtensionData = extensionData;
@@ -217,12 +164,27 @@ namespace Pretzel.SethExtensions.ActivityPub
             return profile;
         }
 
-        private static string GetAttachmentUrl( string? baseUrl )
+        public static DateTime ParseCreatedDate( string? createdDate )
         {
-            ArgumentNullException.ThrowIfNull( baseUrl );
+            return DateTime.ParseExact(
+                createdDate ?? "",
+                "o",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.RoundtripKind
+            );
+        }
 
-            return
-                @$"<a href=""{baseUrl}"" rel=""me nofollow noopener noreferrer"" target=""_blank"">{baseUrl}</a>";
+        public static string ReadPublicKey( string file )
+        {
+            var publicKeyBuilder = new StringBuilder();
+            foreach( string line in File.ReadAllLines( file ) )
+            {
+                publicKeyBuilder.Append( line );
+                publicKeyBuilder.Append( "\\n" );
+            }
+            publicKeyBuilder.Remove( publicKeyBuilder.Length - 2, 2 );
+
+            return publicKeyBuilder.ToString();
         }
 
         private static string GetBaseUrl( IConfiguration config )
@@ -271,24 +233,6 @@ namespace Pretzel.SethExtensions.ActivityPub
 
             fileLocation = value;
             return true;
-        }
-
-        private class PropertyValue : KristofferStrube.ActivityStreams.Object
-        {
-            [JsonPropertyName("value")]
-            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-            public string? Value { get; set; }
-        }
-
-        private class PropertyValueSchema : ITermDefinition
-        {
-            [JsonPropertyName( "PropertyValue" )]
-            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-            public string? PropertyValue { get; set; }
-
-            [JsonPropertyName( "value" )]
-            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-            public string? Value { get; set; }
         }
     }
 }
