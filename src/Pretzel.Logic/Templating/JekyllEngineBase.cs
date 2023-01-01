@@ -108,6 +108,13 @@ namespace Pretzel.Logic.Templating
                 return;
             }
 
+            if( page is RawPage )
+            {
+                CreateOutputDirectory( page.OutputFile );
+                FileSystem.File.WriteAllText( page.OutputFile, page.Content );
+                return;
+            }
+
             if (extension.IsMarkdownFile() || extension.IsRazorFile())
             {
                 page.OutputFile = page.OutputFile.Replace(extension, ".html");
