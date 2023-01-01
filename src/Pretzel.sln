@@ -21,8 +21,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pretzel.Categories", "Pretz
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pretzel.SethExtensions", "Pretzel.SethExtensions\Pretzel.SethExtensions.csproj", "{2D0F77B6-8F8F-46C2-B465-271F8A03A2B6}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ActivityPub.Models", "ActivityPub.Models\src\ActivityPub.Models\ActivityPub.Models.shproj", "{27570BD7-A39C-4755-8521-ACDB4EBACED4}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ActivityStreams", "ActivityStreams", "{E002EEEF-E502-4ED4-9BAB-B640F3DDC2DF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{64C12DA5-B811-4759-8C10-DA6DF80F355A}"
@@ -63,15 +61,11 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {D04F948E-1088-41DC-930E-DDC3748DFFA8}
-	EndGlobalSection
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		ActivityPub.Models\src\ActivityPub.Models\ActivityPub.Models.projitems*{27570bd7-a39c-4755-8521-acdb4ebaced4}*SharedItemsImports = 13
-		ActivityPub.Models\src\ActivityPub.Models\ActivityPub.Models.projitems*{2d0f77b6-8f8f-46c2-b465-271f8a03a2b6}*SharedItemsImports = 5
-	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{64C12DA5-B811-4759-8C10-DA6DF80F355A} = {E002EEEF-E502-4ED4-9BAB-B640F3DDC2DF}
 		{9A688FE0-534E-4A8A-8E84-6CF434A7B54F} = {64C12DA5-B811-4759-8C10-DA6DF80F355A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D04F948E-1088-41DC-930E-DDC3748DFFA8}
 	EndGlobalSection
 EndGlobal
