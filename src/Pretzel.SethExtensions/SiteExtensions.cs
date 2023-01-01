@@ -33,5 +33,16 @@ namespace Pretzel.SethExtensions
 
             return url;
         }
+
+        public static string GetSiteUrlWithoutHttp( this SiteContext context )
+        {
+            string? url = context.Config["urlnohttp"].ToString();
+            if( url is null )
+            {
+                throw new ArgumentNullException( nameof( url ), "'urlnohttp' must be specified in site config." );
+            }
+
+            return url;
+        }
     }
 }
