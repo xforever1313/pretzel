@@ -51,7 +51,7 @@ namespace Pretzel.Logic.Templating
             // Default rendering engine
             if (LightweightMarkupEngine == null)
             {
-                LightweightMarkupEngine = new CommonMarkEngine();
+                LightweightMarkupEngine = new MarkDigEngine();
             }
 
             Tracing.Debug("LightweightMarkupEngine: {0}", LightweightMarkupEngine.GetType().Name);
