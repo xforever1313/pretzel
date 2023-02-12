@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using KristofferStrube.ActivityStreams;
@@ -16,6 +17,8 @@ namespace Pretzel.SethExtensions.ActivityPub
     internal static class OutboxExtensions
     {
         // ---------------- Fields ----------------
+
+        private const string settingsPrefix = ActivityPubPlugin.SettingPrefix;
 
         private static readonly Uri publicStream = new Uri(
             "https://www.w3.org/ns/activitystreams#Public"
@@ -117,7 +120,9 @@ namespace Pretzel.SethExtensions.ActivityPub
                                 ExtensionData = new Dictionary<string, JsonElement>
                                 {
                                     ["sensitive"] = JsonSerializer.SerializeToElement( false )
-                                }
+                                },
+
+                                Attachment = GetFeaturedImage( post, description ),
                             }
                         }
                     }
@@ -138,6 +143,57 @@ namespace Pretzel.SethExtensions.ActivityPub
             };
 
             return outboxCollection;
+        }
+
+        private static IObjectOrLink[]? GetFeaturedImage( Pretzel.Logic.Templating.Context.Page post, string description )
+        {
+            if( post.Bag.ContainsKey( $"{settingsPrefix}_featured_image" ) == false )
+            {
+                return null;
+            }
+            
+            string? urlString = post.Bag[$"{settingsPrefix}_featured_image"]?.ToString();
+            if ( urlString is null )
+            {
+                return null;
+            }
+
+            uint? TryParse( string bagValue )
+            {
+                if( post.Bag.ContainsKey( bagValue ) == false )
+                {
+                    return null;
+                }
+                else if( uint.TryParse( post.Bag[bagValue]?.ToString(), out uint value ) )
+                {
+                    return value;
+                }
+                
+                return null;
+            }
+
+            uint? width = TryParse( $"{settingsPrefix}_featured_image_width" );
+            uint? height = TryParse( $"{settingsPrefix}_featured_image_height" );
+
+            var featuredImage = new Uri( urlString );
+            return new IObjectOrLink[]
+            {
+                new Image
+                {
+                    Type = new string[] { "Image" },
+                    MediaType = $"image/{Path.GetExtension( urlString ).TrimStart( '.' )}",
+                    Name = new string[] { description },
+                    Url = new Link[]
+                    {
+                        new Link
+                        {
+                            Height = height,
+                            Width = width,
+                            Href = featuredImage
+                        }
+                    }
+                }
+            };
         }
     }
 }
