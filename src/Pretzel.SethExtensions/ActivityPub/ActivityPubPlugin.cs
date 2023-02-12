@@ -4,6 +4,7 @@
 //
 
 using System;
+using System.Collections.Generic;
 using System.Composition;
 using System.IO;
 using System.Text.Json;
@@ -18,6 +19,10 @@ namespace Pretzel.SethExtensions.ActivityPub
         // ---------------- Fields ----------------
 
         internal const string SettingPrefix = "actpub";
+
+        internal static readonly Uri PublicStream = new Uri(
+            "https://www.w3.org/ns/activitystreams#Public"
+        );
 
         // ---------------- Functions ----------------
 
@@ -156,19 +161,38 @@ namespace Pretzel.SethExtensions.ActivityPub
 
         private static void WriteOutbox( DirectoryInfo outputDir, SiteContext context )
         {
-            var outbox = OutboxExtensions.FromSiteContext( context );
-            string jsonString = JsonSerializer.Serialize(
-                outbox,
-                new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                }
-            );
+            var outbox = new Outbox( context );
 
-            FileInfo outFile = new FileInfo(
-                Path.Combine( outputDir.FullName, "outbox.json" )
-            );
-            File.WriteAllText( outFile.FullName, jsonString );
+            {
+                string indexJsonString = JsonSerializer.Serialize(
+                    outbox.GetOutboxIndex(),
+                    new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    }
+                );
+
+                FileInfo outFile = new FileInfo(
+                    Path.Combine( outputDir.FullName, "outbox.json" )
+                );
+                File.WriteAllText( outFile.FullName, indexJsonString );
+            }
+
+            foreach( var kvp in outbox.GetOutboxPages() )
+            {
+                string jsonString = JsonSerializer.Serialize(
+                    kvp.Value,
+                    new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    }
+                );
+
+                FileInfo outFile = new FileInfo(
+                    Path.Combine( outputDir.FullName, $"outbox{kvp.Key}.json" )
+                );
+                File.WriteAllText( outFile.FullName, jsonString );
+            }
         }
     }
 }
