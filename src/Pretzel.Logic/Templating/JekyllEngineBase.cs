@@ -91,7 +91,11 @@ namespace Pretzel.Logic.Templating
             if (string.IsNullOrWhiteSpace(relativePath))
                 relativePath = MapToOutputPath(page.File);
 
-            page.OutputFile = Path.Combine(outputDirectory, relativePath);
+            if( string.IsNullOrWhiteSpace( page.OutputFile ) )
+            {
+                page.OutputFile = Path.Combine( outputDirectory, relativePath );
+            }
+
             var extension = Path.GetExtension(page.File);
 
             if (extension.IsImageFormat())
