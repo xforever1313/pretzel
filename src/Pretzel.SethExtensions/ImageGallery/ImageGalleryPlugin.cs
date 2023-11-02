@@ -18,6 +18,8 @@ namespace Pretzel.SethExtensions.ImageGallery
     {
         // ---------------- Fields ----------------
 
+        internal const string ImageGalleryDataKey = "image_gallery_data";
+
         private const string imageGallerySetting = "image_gallery";
 
         private const string imageThumbNailWorkSetting = "thumbnail_work_dir";
@@ -97,6 +99,7 @@ namespace Pretzel.SethExtensions.ImageGallery
                         }
                     }
                 );
+                page.Bag[ImageGalleryDataKey] = config;
                 Console.WriteLine( $"Generating thumbnails for image gallery on page: {page.Id}...Done!" );
             }
         }
