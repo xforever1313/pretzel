@@ -4,6 +4,7 @@
 //
 
 using System;
+using System.Collections.Generic;
 using System.Composition;
 using System.IO;
 using System.Threading.Tasks;
@@ -62,6 +63,8 @@ namespace Pretzel.SethExtensions.ImageGallery
 
                 var linkHelper = new LinkHelper();
 
+                var imageContentList = new List<ImageInfoContext>();
+
                 Console.WriteLine( $"Generating thumbnails for image gallery on page: {page.Id}..." );
                 Parallel.ForEach(
                     config.ImageInfo,
@@ -72,6 +75,9 @@ namespace Pretzel.SethExtensions.ImageGallery
                             config.InputImageDirectory,
                             imageInfo.FileName
                         );
+
+                        // GetFullPath normalizes separator characters.
+                        originalFile = Path.GetFullPath( originalFile );
 
                         using( var fileStream = new FileStream( originalFile, FileMode.Open, FileAccess.Read ) )
                         using( var image = new JpegImage( fileStream ) )
@@ -84,22 +90,45 @@ namespace Pretzel.SethExtensions.ImageGallery
                             string inFile = Path.Combine( thumbNailFolder.FullName, imageInfo.ThumbnailFileName );
                             File.WriteAllBytes( inFile, bytes );
 
-                            var page = new Page
+                            var thumbnailPage = new Page
                             {
                                 Id = $"{config.Id}-{imageInfo.FileName}",
                                 File = inFile,
                                 Filepath = Path.Combine( context.OutputFolder, config.ThumbnailOutputFolder, imageInfo.ThumbnailFileName ),
                                 OutputFile = Path.Combine( context.OutputFolder, config.ThumbnailOutputFolder, imageInfo.ThumbnailFileName )
                             };
+
+                            Page? originalPhotoPage = null;
                             lock( context )
                             {
-                                page.Url = linkHelper.EvaluateLink( context, page );
-                                context.Pages.Add( page );
+                                thumbnailPage.Url = linkHelper.EvaluateLink( context, thumbnailPage );
+                                context.Pages.Add( thumbnailPage );
+                                foreach( Page pageToLook in context.Pages )
+                                {
+                                    if( pageToLook.File == originalFile )
+                                    {
+                                        originalPhotoPage = pageToLook;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if( originalPhotoPage is null )
+                            {
+                                throw new InvalidOperationException(
+                                    $"Can not locate original image to thumbnail: {imageInfo.FileName}"
+                                );
+                            }
+
+                            var imageInfoContext = new ImageInfoContext( originalPhotoPage, thumbnailPage, imageInfo );
+                            lock( imageContentList )
+                            {
+                                imageContentList.Add( imageInfoContext );
                             }
                         }
                     }
                 );
-                page.Bag[ImageGalleryDataKey] = config;
+                page.Bag[ImageGalleryDataKey] = imageContentList;
                 Console.WriteLine( $"Generating thumbnails for image gallery on page: {page.Id}...Done!" );
             }
         }

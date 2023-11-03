@@ -4,22 +4,23 @@
 //
 
 using System;
+using System.Collections.Generic;
 using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.SethExtensions.ImageGallery
 {
     public static class PageContextExtensions
     {
-        public static ImageGalleryConfig GetImageGalleryConfig( this PageContext page )
+        public static IEnumerable<ImageInfoContext> GetImageGalleryConfig( this PageContext page )
         {
             if( page.Bag.ContainsKey( ImageGalleryPlugin.ImageGalleryDataKey ) == false )
             {
                 throw new ArgumentException( $"{page.Page.Id} does not contain Image Gallery Data", nameof( page ) );
             }
 
-            if( page.Bag[ImageGalleryPlugin.ImageGalleryDataKey] is ImageGalleryConfig imageGalleryConfig )
+            if( page.Bag[ImageGalleryPlugin.ImageGalleryDataKey] is IEnumerable<ImageInfoContext> imageContexts )
             {
-                return imageGalleryConfig;
+                return imageContexts;
             }
             else
             {

@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Pretzel.Logic.Templating.Context;
 
 namespace Pretzel.SethExtensions.ImageGallery
 {
@@ -34,6 +33,11 @@ namespace Pretzel.SethExtensions.ImageGallery
         public string ThumbnailFileName => $"{Path.GetFileNameWithoutExtension( this.FileName )}_thumb.jpg";
 
         // ---------------- Functions ----------------
+
+        public string SafeGetAlt()
+        {
+            return this.Alt ?? "";
+        }
 
         public bool TryValidate( out string errorString )
         {
