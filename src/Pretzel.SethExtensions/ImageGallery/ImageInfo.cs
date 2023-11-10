@@ -15,6 +15,8 @@ namespace Pretzel.SethExtensions.ImageGallery
     {
         // ---------------- Properties ----------------
 
+        public int Index { get; init; } = -1;
+
         /// <summary>
         /// The name of the file within the gallery folder.
         /// </summary>
@@ -74,9 +76,12 @@ namespace Pretzel.SethExtensions.ImageGallery
 
         // ---------------- Functions ----------------
 
-        public static ImageInfo FromXml( ImageGalleryConfig mainConfig, XElement element )
+        public static ImageInfo FromXml( int index, XElement element )
         {
-            var imageInfo = new ImageInfo();
+            var imageInfo = new ImageInfo
+            {
+                Index = index
+            };
 
             foreach( XAttribute attr in element.Attributes() )
             {

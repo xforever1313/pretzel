@@ -7,8 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using BitMiracle.LibJpeg;
+using ImageMagick;
 using Pretzel.Logic.Extensibility;
 using Pretzel.Logic.Templating.Context;
 
@@ -80,15 +81,16 @@ namespace Pretzel.SethExtensions.ImageGallery
                         originalFile = Path.GetFullPath( originalFile );
 
                         using( var fileStream = new FileStream( originalFile, FileMode.Open, FileAccess.Read ) )
-                        using( var image = new JpegImage( fileStream ) )
+                        using( var image = new MagickImage( fileStream ) )
                         {
                             int thumbnailHeight = (int)Math.Round( image.Height * config.ThumbnailScale );
                             int thumbnailWidth = (int)Math.Round( image.Width * config.ThumbnailScale );
+                            var size = new MagickGeometry( thumbnailWidth, thumbnailHeight );
 
-                            // TODO: new image.
-                            var bytes = new byte[] { 1, 2, 3 };
+                            image.Resize( size );
+
                             string inFile = Path.Combine( thumbNailFolder.FullName, imageInfo.ThumbnailFileName );
-                            File.WriteAllBytes( inFile, bytes );
+                            image.Write( inFile );
 
                             var thumbnailPage = new Page
                             {
@@ -107,6 +109,7 @@ namespace Pretzel.SethExtensions.ImageGallery
                                 {
                                     if( pageToLook.File == originalFile )
                                     {
+                                        Console.WriteLine( "Page file: " + pageToLook.File );
                                         originalPhotoPage = pageToLook;
                                         break;
                                     }
@@ -120,7 +123,13 @@ namespace Pretzel.SethExtensions.ImageGallery
                                 );
                             }
 
-                            var imageInfoContext = new ImageInfoContext( originalPhotoPage, thumbnailPage, imageInfo );
+                            var imageInfoContext = new ImageInfoContext(
+                                linkHelper.EvaluateLink( context, originalPhotoPage ),
+                                thumbnailPage.Url,
+                                thumbnailWidth,
+                                thumbnailHeight,
+                                imageInfo
+                            );
                             lock( imageContentList )
                             {
                                 imageContentList.Add( imageInfoContext );
@@ -128,7 +137,7 @@ namespace Pretzel.SethExtensions.ImageGallery
                         }
                     }
                 );
-                page.Bag[ImageGalleryDataKey] = imageContentList;
+                page.Bag[ImageGalleryDataKey] = imageContentList.OrderBy( i => i.ImageInfo.Index );
                 Console.WriteLine( $"Generating thumbnails for image gallery on page: {page.Id}...Done!" );
             }
         }

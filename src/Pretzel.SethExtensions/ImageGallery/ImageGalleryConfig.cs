@@ -155,12 +155,14 @@ namespace Pretzel.SethExtensions.ImageGallery
             }
 
             var images = new List<ImageInfo>();
+            int index = 0;
             foreach( XElement element in root.Elements() )
             {
                 if( ImageInfoExtensions.XmlRootName.Equals( element.Name.LocalName ) )
                 {
-                    images.Add( ImageInfoExtensions.FromXml( config, element ) );
+                    images.Add( ImageInfoExtensions.FromXml( index, element ) );
                 }
+                ++index;
             }
 
             config = config with { ImageInfo = images.AsReadOnly() };
