@@ -41,6 +41,11 @@ namespace Pretzel.SethExtensions.ImageGallery
             return this.Alt ?? "";
         }
 
+        public string SafeGetCaption()
+        {
+            return this.Caption ?? "";
+        }
+
         public bool TryValidate( out string errorString )
         {
             var errorList = new List<string>();

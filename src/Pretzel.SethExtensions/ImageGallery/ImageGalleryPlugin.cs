@@ -109,7 +109,6 @@ namespace Pretzel.SethExtensions.ImageGallery
                                 {
                                     if( pageToLook.File == originalFile )
                                     {
-                                        Console.WriteLine( "Page file: " + pageToLook.File );
                                         originalPhotoPage = pageToLook;
                                         break;
                                     }
