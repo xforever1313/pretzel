@@ -41,6 +41,10 @@ namespace Pretzel.SethExtensions.ImageGallery
             }
 
             DirectoryInfo thumbNailFolder = new DirectoryInfo( Path.Combine( context.SourceFolder, thumbnailWorkSetting ) );
+            if( thumbNailFolder.Exists == false )
+            {
+                Directory.CreateDirectory( thumbNailFolder.FullName );
+            }
 
             foreach( Page page in context.Posts )
             {
