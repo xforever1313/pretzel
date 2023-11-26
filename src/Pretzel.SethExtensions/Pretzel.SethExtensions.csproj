@@ -8,13 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="KristofferStrube.ActivityStreams" Version="0.2.1" />
     <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="13.4.0" />
     <PackageReference Include="Magick.NET.Core" Version="13.4.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Pretzel.Logic\Pretzel.Logic.csproj" />
-    <ProjectReference Include="..\ActivityStreams\src\KristofferStrube.ActivityStreams\KristofferStrube.ActivityStreams.csproj" />
   </ItemGroup>
 
 </Project>

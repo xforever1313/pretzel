@@ -1,4 +1,0 @@
-[submodule "src/ActivityStreams"]
-	path = src/ActivityStreams
-	url = https://github.com/xforever1313/ActivityStreams.git
-	branch = main
