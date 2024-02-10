@@ -81,6 +81,14 @@ namespace Pretzel.SethExtensions.ImageGallery
 
             var imageContentList = new List<ImageInfoContext>();
 
+            FileInfo? defaultImage = null;
+            if( string.IsNullOrWhiteSpace( config.DefaultImagePath ) == false )
+            {
+                defaultImage = new FileInfo(
+                    Path.Combine( context.SourceFolder, config.InputImageDirectory, config.DefaultImagePath )
+                );
+            }
+
             Console.WriteLine( $"Generating thumbnails for image gallery on page: {page.Id}..." );
             Parallel.ForEach(
                 config.ImageInfo,
@@ -97,15 +105,24 @@ namespace Pretzel.SethExtensions.ImageGallery
 
                     if( Path.Exists( originalFile ) == false )
                     {
-                        Console.WriteLine( $"\t-Warning: '{originalFile}' does not exist, skipping thumbnail creation." );
-                        return;
+                        if( defaultImage is null )
+                        {
+                            throw new FileNotFoundException(
+                                $"Can not find image '{originalFile}', and {nameof( config.DefaultImagePath )} is not specified."
+                            );
+                        }
+                        else
+                        {
+                            Console.WriteLine( $"\t-Warning: '{originalFile}' does not exist, using default image." );
+                            originalFile = Path.GetFullPath( defaultImage.FullName );
+                        }
                     }
 
                     using( var fileStream = new FileStream( originalFile, FileMode.Open, FileAccess.Read ) )
                     using( var image = new MagickImage( fileStream ) )
                     {
-                        int thumbnailHeight = (int)Math.Round( image.Height * config.ThumbnailScale );
-                        int thumbnailWidth = (int)Math.Round( image.Width * config.ThumbnailScale );
+                        int thumbnailHeight = (int)Math.Round( image.Height * ( imageInfo.ThumbnailScale ?? config.ThumbnailScale ) );
+                        int thumbnailWidth = (int)Math.Round( image.Width * ( imageInfo.ThumbnailScale ?? config.ThumbnailScale ) );
                         var size = new MagickGeometry( thumbnailWidth, thumbnailHeight );
 
                         image.Resize( size );

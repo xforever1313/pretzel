@@ -32,6 +32,12 @@ namespace Pretzel.SethExtensions.ImageGallery
         /// </summary>
         public string? Caption { get; init; } = null;
 
+        /// <summary>
+        /// The thumbnail scale of the specific image.
+        /// If this is specified, it overrides <see cref="ImageGalleryConfig.ThumbnailScale"/>
+        /// </summary>
+        public float? ThumbnailScale { get; init; } = null;
+
         public string ThumbnailFileName => $"{Path.GetFileNameWithoutExtension( this.FileName )}_thumb.jpg";
 
         // ---------------- Functions ----------------
@@ -58,6 +64,16 @@ namespace Pretzel.SethExtensions.ImageGallery
             if( string.IsNullOrWhiteSpace( this.ThumbnailFileName ) )
             {
                 errorList.Add( $"{nameof( this.ThumbnailFileName )} can not be null or empty." );
+            }
+
+            if( this.ThumbnailScale.HasValue )
+            {
+                if( ( this.ThumbnailScale < 0 ) || ( this.ThumbnailScale > 100 ) )
+                {
+                    errorList.Add(
+                        $"{nameof( this.ThumbnailScale )} must be between 0 and 100 (inclusive).  Got: {this.ThumbnailScale}"
+                    );
+                }
             }
 
             if( errorList.Any() )
@@ -108,6 +124,20 @@ namespace Pretzel.SethExtensions.ImageGallery
                 if( "Caption".Equals( childElement.Name.LocalName ) )
                 {
                     imageInfo = imageInfo with { Caption = childElement.Value };
+                }
+                if( "ThumbnailScale".Equals( childElement.Name.LocalName ) )
+                {
+                    if( float.TryParse( childElement.Value, out float scale ) )
+                    {
+                        imageInfo = imageInfo with { ThumbnailScale = scale };
+                    }
+                    else
+                    {
+                        throw new ArgumentException(
+                            $"XML file contains non-floating point value for ThumbnailScale: {childElement.Value}",
+                            nameof( element )
+                        );
+                    }
                 }
             }
 

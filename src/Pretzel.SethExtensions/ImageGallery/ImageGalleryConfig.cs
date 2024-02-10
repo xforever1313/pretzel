@@ -24,6 +24,16 @@ namespace Pretzel.SethExtensions.ImageGallery
         public string InputImageDirectory { get; init; } = "";
 
         /// <summary>
+        /// If an input image is not found for some reason,
+        /// this image will be used instead.
+        /// The path should be a relative path inside of <see cref="InputImageDirectory"/>.
+        /// 
+        /// If this is not specified, and an image is not found, an exception
+        /// will be thrown.
+        /// </summary>
+        public string DefaultImagePath { get; init; } = "";
+
+        /// <summary>
         /// The URI path that contains the thumbnails
         /// of the generated images.
         /// </summary>
@@ -138,7 +148,14 @@ namespace Pretzel.SethExtensions.ImageGallery
                         ThumbnailOutputFolder = attr.Value
                     };
                 }
-                else if( "ThumbnailScale".Equals( attr.Name.LocalName ) )
+                else if( "DefaultImage".Equals( attr.Name.LocalName ) )
+                {
+                    config = config with
+                    {
+                        DefaultImagePath = attr.Value
+                    };
+                }
+                else if( "DefaultThumbnailScale".Equals( attr.Name.LocalName ) || "ThumbnailScale".Equals( attr.Name.LocalName ) )
                 {
                     if( float.TryParse( attr.Value, out float scale ) )
                     {
