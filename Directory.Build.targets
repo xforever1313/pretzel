@@ -1,0 +1,27 @@
+<Project>
+
+  <ItemGroup>
+    <!-- Unit test packages not included, since those only exist in that project. -->
+    <PackageReference Update="CsvHelper" Version="12.1.2" />
+    <PackageReference Update="dotless.Core" Version="1.6.7" />
+    <PackageReference Update="DotLiquid" Version="2.2.692" />
+    <PackageReference Update="HtmlAgilityPack" Version="1.11.54" />
+    <PackageReference Update="Markdig" Version="0.33.0" />
+    <PackageReference Update="Microsoft.AspNetCore" Version="2.2.0" />
+    <PackageReference Update="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
+    <PackageReference Update="Microsoft.Extensions.Hosting" Version="2.2.0" />
+    <PackageReference Update="Microsoft.AspNetCore.Mvc.Razor.Extensions" Version="2.2.0" />
+    <PackageReference Update="NUglify" Version="1.21.0" />
+    <PackageReference Update="RazorEngine.NetCore" Version="3.1.0" />
+    <PackageReference Update="System.CommandLine.Experimental" Version="0.3.0-alpha.19405.1" />
+    <PackageReference Update="System.Composition" Version="1.2.0" />
+    <PackageReference Update="System.IO.Abstractions" Version="6.0.32" />
+    <PackageReference Update="System.Runtime.Extensions" Version="4.3.1" />
+    <PackageReference Update="YamlDotNet" Version="13.7.1" />
+
+    <PackageReference Update="KristofferStrube.ActivityStreams" Version="0.2.1" />
+    <PackageReference Update="Magick.NET-Q16-AnyCPU" Version="13.4.0" />
+    <PackageReference Update="Magick.NET.Core" Version="13.4.0" />
+  </ItemGroup>
+
+</Project>

@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="KristofferStrube.ActivityStreams" Version="0.2.1" />
-    <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="13.4.0" />
-    <PackageReference Include="Magick.NET.Core" Version="13.4.0" />
+    <PackageReference Include="KristofferStrube.ActivityStreams" />
+    <PackageReference Include="Magick.NET-Q16-AnyCPU" />
+    <PackageReference Include="Magick.NET.Core" />
   </ItemGroup>
 
   <ItemGroup>
