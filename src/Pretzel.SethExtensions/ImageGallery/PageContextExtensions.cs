@@ -13,9 +13,14 @@ namespace Pretzel.SethExtensions.ImageGallery
     {
         public static IEnumerable<ImageInfoContext> GetImageGalleryConfig( this PageContext page )
         {
+            return GetImageGalleryConfig( page.Page );
+        }
+
+        public static IEnumerable<ImageInfoContext> GetImageGalleryConfig( this Page page )
+        {
             if( page.Bag.ContainsKey( ImageGalleryPlugin.ImageGalleryDataKey ) == false )
             {
-                throw new ArgumentException( $"{page.Page.Id} does not contain Image Gallery Data", nameof( page ) );
+                throw new ArgumentException( $"{page.Id} does not contain Image Gallery Data", nameof( page ) );
             }
 
             if( page.Bag[ImageGalleryPlugin.ImageGalleryDataKey] is IEnumerable<ImageInfoContext> imageContexts )
@@ -24,7 +29,7 @@ namespace Pretzel.SethExtensions.ImageGallery
             }
             else
             {
-                throw new ArgumentException( $"{page.Page.Id} does not contain Image Gallery Data, it is of the wrong type or null.", nameof( page ) );
+                throw new ArgumentException( $"{page.Id} does not contain Image Gallery Data, it is of the wrong type or null.", nameof( page ) );
             }
         }
     }

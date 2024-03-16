@@ -24,23 +24,11 @@ namespace Pretzel.SethExtensions.ImageGallery
 
         private const string imageGallerySetting = "image_gallery";
 
-        private const string imageThumbNailWorkSetting = "thumbnail_work_dir";
-
         // ---------------- Functions ----------------
 
         public void Transform( SiteContext context )
         {
-            string thumbnailWorkSetting = "_thumbnails";
-            if( context.Config.ContainsKey( imageThumbNailWorkSetting ) )
-            {
-                string? imageThumbnailWorkValue = context.Config[imageThumbNailWorkSetting].ToString();
-                if( string.IsNullOrWhiteSpace( imageThumbnailWorkValue ) == false )
-                {
-                    thumbnailWorkSetting = imageThumbnailWorkValue;
-                }
-            }
-
-            DirectoryInfo thumbNailFolder = new DirectoryInfo( Path.Combine( context.SourceFolder, thumbnailWorkSetting ) );
+            DirectoryInfo thumbNailFolder = context.GetThumbnailWorkFolder();
             if( thumbNailFolder.Exists == false )
             {
                 Directory.CreateDirectory( thumbNailFolder.FullName );
@@ -125,6 +113,9 @@ namespace Pretzel.SethExtensions.ImageGallery
                         int thumbnailWidth = (int)Math.Round( image.Width * ( imageInfo.ThumbnailScale ?? config.ThumbnailScale ) );
                         var size = new MagickGeometry( thumbnailWidth, thumbnailHeight );
 
+                        int orignialWidth = image.BaseWidth;
+                        int originalHeight = image.BaseHeight;
+
                         image.Resize( size );
 
                         string inFile = Path.Combine( thumbNailFolder.FullName, imageInfo.ThumbnailFileName );
@@ -162,7 +153,10 @@ namespace Pretzel.SethExtensions.ImageGallery
                         }
 
                         var imageInfoContext = new ImageInfoContext(
+                            new FileInfo( originalFile ),
                             linkHelper.EvaluateLink( context, originalPhotoPage ),
+                            orignialWidth,
+                            originalHeight,
                             thumbnailPage.Url,
                             thumbnailWidth,
                             thumbnailHeight,
