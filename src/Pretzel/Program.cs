@@ -182,7 +182,7 @@ namespace Pretzel
 
                 if (Directory.Exists(pluginsPath))
                 {
-                    var files = Directory.EnumerateFiles(pluginsPath, "*.dll", SearchOption.AllDirectories);
+                    var files = Directory.EnumerateFiles(pluginsPath, "*.dll", SearchOption.AllDirectories).OrderBy( f => f );
                     foreach (var file in files)
                     {
                         try

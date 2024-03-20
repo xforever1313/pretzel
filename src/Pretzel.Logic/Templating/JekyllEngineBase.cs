@@ -59,6 +59,7 @@ namespace Pretzel.Logic.Templating
             Context = context;
             PreProcess();
 
+            Tracing.Debug( "Processing Posts..." );
             for (int index = 0; index < context.Posts.Count; index++)
             {
                 var p = context.Posts[index];
@@ -66,7 +67,9 @@ namespace Pretzel.Logic.Templating
                 var next = GetNext(context.Posts, index);
                 ProcessFile(context.OutputFolder, p, previous, next, skipFileOnError, p.Filepath);
             }
+            Tracing.Debug( "Processing Posts... Done!" );
 
+            Tracing.Debug( "Processing Pages..." );
             for (int index = 0; index < context.Pages.Count; index++)
             {
                 var p = context.Pages[index];
@@ -74,6 +77,7 @@ namespace Pretzel.Logic.Templating
                 var next = GetNext(context.Pages, index);
                 ProcessFile(context.OutputFolder, p, previous, next, skipFileOnError);
             }
+            Tracing.Debug( "Processing Pages... Done!" );
         }
 
         private static Page GetPrevious(IList<Page> pages, int index)
