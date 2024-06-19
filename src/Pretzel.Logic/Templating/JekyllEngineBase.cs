@@ -1,15 +1,16 @@
+using System;
+using System.Collections.Generic;
+using System.Composition;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Abstractions;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Pretzel.Logic.Exceptions;
 using Pretzel.Logic.Extensibility;
 using Pretzel.Logic.Extensibility.Extensions;
 using Pretzel.Logic.Extensions;
 using Pretzel.Logic.Templating.Context;
-using System;
-using System.Collections.Generic;
-using System.Composition;
-using System.IO;
-using System.IO.Abstractions;
-using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Pretzel.Logic.Templating
 {
@@ -48,6 +49,9 @@ namespace Pretzel.Logic.Templating
 
         public void Process(SiteContext context, bool skipFileOnError = false)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             // Default rendering engine
             if (LightweightMarkupEngine == null)
             {
@@ -59,7 +63,7 @@ namespace Pretzel.Logic.Templating
             Context = context;
             PreProcess();
 
-            Tracing.Debug( "Processing Posts..." );
+            Tracing.Debug( $"Processing {context.Posts.Count} Posts..." );
             for (int index = 0; index < context.Posts.Count; index++)
             {
                 var p = context.Posts[index];
@@ -67,9 +71,9 @@ namespace Pretzel.Logic.Templating
                 var next = GetNext(context.Posts, index);
                 ProcessFile(context.OutputFolder, p, previous, next, skipFileOnError, p.Filepath);
             }
-            Tracing.Debug( "Processing Posts... Done!" );
+            Tracing.Debug( $"Processing {context.Posts.Count} Posts... Done!" );
 
-            Tracing.Debug( "Processing Pages..." );
+            Tracing.Debug( $"Processing {context.Pages.Count} Pages..." );
             for (int index = 0; index < context.Pages.Count; index++)
             {
                 var p = context.Pages[index];
@@ -77,7 +81,9 @@ namespace Pretzel.Logic.Templating
                 var next = GetNext(context.Pages, index);
                 ProcessFile(context.OutputFolder, p, previous, next, skipFileOnError);
             }
-            Tracing.Debug( "Processing Pages... Done!" );
+            Tracing.Debug( $"Processing {context.Pages.Count} Pages... Done!" );
+
+            Tracing.Debug( $"Total Time: {stopwatch.Elapsed.TotalSeconds} seconds." );
         }
 
         private static Page GetPrevious(IList<Page> pages, int index)
