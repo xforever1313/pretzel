@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Pretzel.SethExtensions.ImageGallery
@@ -37,6 +38,18 @@ namespace Pretzel.SethExtensions.ImageGallery
         /// If this is specified, it overrides <see cref="ImageGalleryConfig.ThumbnailScale"/>
         /// </summary>
         public float? ThumbnailScale { get; init; } = null;
+
+        /// <summary>
+        /// Set to non-null value if the photo was taken on a different
+        /// date as the post date.
+        /// </summary>
+        public DateOnly? PhotoDate { get; init; } = null;
+
+        /// <summary>
+        /// If <see cref="PhotoDate"/> is an estimate or not.
+        /// Ignore if <see cref="PhotoDate"/> is null.
+        /// </summary>
+        public bool DateIsEstimate { get; init; } = false;
 
         public string ThumbnailFileName => $"{Path.GetFileNameWithoutExtension( this.FileName )}_thumb.jpg";
 
@@ -121,11 +134,11 @@ namespace Pretzel.SethExtensions.ImageGallery
                 {
                     imageInfo = imageInfo with { Alt = childElement.Value };
                 }
-                if( "Caption".Equals( childElement.Name.LocalName ) )
+                else if( "Caption".Equals( childElement.Name.LocalName ) )
                 {
                     imageInfo = imageInfo with { Caption = childElement.Value };
                 }
-                if( "ThumbnailScale".Equals( childElement.Name.LocalName ) )
+                else if( "ThumbnailScale".Equals( childElement.Name.LocalName ) )
                 {
                     if( float.TryParse( childElement.Value, out float scale ) )
                     {
@@ -138,6 +151,49 @@ namespace Pretzel.SethExtensions.ImageGallery
                             nameof( element )
                         );
                     }
+                }
+                else if( "Date".Equals( childElement.Name.LocalName ) )
+                {
+                    bool dateEstimate = false;
+                    int? year = null;
+                    int? month = null;
+                    int? day = null;
+                    foreach( XAttribute dateAttr in childElement.Attributes() )
+                    {
+                        if( "Estimate".Equals( dateAttr.Name ) )
+                        {
+                            dateEstimate = bool.Parse( dateAttr.Value );
+                        }
+                    }
+
+                    foreach( XElement dateElement in childElement.Elements() )
+                    {
+                        if( "Year".Equals( dateElement.Name.LocalName ) )
+                        {
+                            year = int.Parse( dateElement.Value );
+                        }
+                        else if( "Month".Equals( dateElement.Name.LocalName ) )
+                        {
+                            month = int.Parse( dateElement.Value );
+                        }
+                        else if( "Day".Equals ( dateElement.Name.LocalName ) )
+                        {
+                            day = int.Parse( dateElement.Value );
+                        }
+                    }
+
+                    if( ( year is null ) || ( month is null ) || ( day is null ) )
+                    {
+                        throw new XmlException(
+                            $"Incomplete date on photo {imageInfo.FileName}"
+                        );
+                    }
+
+                    imageInfo = imageInfo with
+                    {
+                        PhotoDate = new DateOnly( year.Value, month.Value, day.Value ),
+                        DateIsEstimate = dateEstimate
+                    };
                 }
             }
 
