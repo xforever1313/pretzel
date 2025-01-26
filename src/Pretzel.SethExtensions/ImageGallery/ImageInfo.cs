@@ -34,6 +34,12 @@ namespace Pretzel.SethExtensions.ImageGallery
         public string? Caption { get; init; } = null;
 
         /// <summary>
+        /// Notes for a photo.  These may not be visible on the website,
+        /// but are useful for website editors.
+        /// </summary>
+        public string? Notes { get; init; } = null;
+
+        /// <summary>
         /// The thumbnail scale of the specific image.
         /// If this is specified, it overrides <see cref="ImageGalleryConfig.ThumbnailScale"/>
         /// </summary>
@@ -63,6 +69,11 @@ namespace Pretzel.SethExtensions.ImageGallery
         public string SafeGetCaption()
         {
             return this.Caption ?? "";
+        }
+
+        public string SafeGetNotes()
+        {
+            return this.Notes ?? "";
         }
 
         public bool TryValidate( out string errorString )
@@ -138,6 +149,10 @@ namespace Pretzel.SethExtensions.ImageGallery
                 {
                     imageInfo = imageInfo with { Caption = childElement.Value };
                 }
+                else if( "Notes".Equals( childElement.Name.LocalName ) )
+                {
+                    imageInfo = imageInfo with { Notes = childElement.Value };
+                }
                 else if( "ThumbnailScale".Equals( childElement.Name.LocalName ) )
                 {
                     if( float.TryParse( childElement.Value, out float scale ) )
@@ -160,7 +175,7 @@ namespace Pretzel.SethExtensions.ImageGallery
                     int? day = null;
                     foreach( XAttribute dateAttr in childElement.Attributes() )
                     {
-                        if( "Estimate".Equals( dateAttr.Name ) )
+                        if( "Estimate".Equals( dateAttr.Name.LocalName ) )
                         {
                             dateEstimate = bool.Parse( dateAttr.Value );
                         }
